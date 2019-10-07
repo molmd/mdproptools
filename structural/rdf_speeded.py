@@ -37,11 +37,11 @@ def main_loop(data, relation_matrix, nbin, rcut, ddr, RDF_FULL, RDF_P):
         dx = data_i[:, 2]
         dy = data_i[:, 3]
         dz = data_i[:, 4]
-        cond = (dx > Lx / 2) | (-dx < -Lx / 2)
+        cond = (dx > Lx / 2) | (dx < -Lx / 2)
         dx[cond] = dx[cond] - np.sign(dx[cond]) * Lx
-        cond = (dy > Ly / 2) | (-dy < -Ly / 2)
+        cond = (dy > Ly / 2) | (dy < -Ly / 2)
         dy[cond] = dy[cond] - np.sign(dy[cond]) * Ly
-        cond = (dz > Lz / 2) | (-dz < -Lz / 2)
+        cond = (dz > Lz / 2) | (dz < -Lz / 2)
         dz[cond] = dz[cond] - np.sign(dz[cond]) * Lz
         rsq = dx ** 2 + dy ** 2 + dz ** 2
         data_i[:, 5] = rsq
