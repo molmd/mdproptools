@@ -1,1 +1,4 @@
-This directory contains all the files used to test the current version of the rdf code. The LAMMPS dump files are the .lammpstrj files, the rdf_.dat files are the output from the old script version of the code, the input.dat file is the input file for the old script version, the rdf.csv is the ouput from the current functionalized version of the code, and the rdf_testing.py is a sample script for the current functionalized version.
+This directory contains all the files used to test the current version of the rdf code.
+
+Files from old scripted version: rdf_nm.dat, rdf_full.dat, input.dat
+Files from new scripted version: rdf.csv
