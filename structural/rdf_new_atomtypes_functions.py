@@ -95,6 +95,7 @@ def calc_atom_type(data, n_mols, n_atoms):
     return data
 
 def is_multiple()
+    pass
 
 def calc_rdf(r_cut, bin_size, check_n_atoms, ntypes, Mass, n_part_rdfs, Atom_types,filename, nmols=None, natoms_per_mol=None):
     ''''''
