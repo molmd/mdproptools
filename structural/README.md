@@ -1,0 +1,3 @@
+rdf_new_atomtypes.py contains the messy code for utilizing the atomtypes based on single atoms in the molecule
+
+rdf_new_atomtypes_functions.py contains just the functions necessary for running rdf. The input argument order is changed a little from previous versions to allow for calculating rdf based on the new atomtypes and LAMMPS atom types. For the new atomtypes, you need to set nmols as a list with the number of molecules in the same order that was used by packmol to create the initial data file. The natoms_per_mol needs to be set to a list with the number of atoms for each molecule in the same order as nmols. If you want to use lammps atomtypes, keep those two arguments set to None.
