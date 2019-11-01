@@ -177,7 +177,7 @@ nrdfs = 7
 atom_types = [[12, 12, 12, 12, 12, 6, 1],
               [ 1,  6,  8, 10, 12, 6, 1]]
 filename = 'dump.0.5M_dhps_2.5M_na_1M_oh.nvt_298.15K.*'
-# filename = 'dump.0.5M_dhps_2.5M_na_1M_oh.nvt_298.15K.0.lammpstrj'
+filename = 'dump.0.5M_dhps_2.5M_na_1M_oh.nvt_298.15K.0.lammpstrj'
 workdir = './'
 os.chdir(workdir0)
 
@@ -233,6 +233,48 @@ print(np.asarray(atom_types).shape)
 # Final_data_frame = pd.DataFrame(Final_data_array.transpose(),columns=Final_data_labels)
 # print(Final_data_frame)
 
+n_types_of_mols = 4
+n_mols_of_each_type = [105, 10561, 210, 525]
+n_atoms_in_each_mol = [25, 3, 2, 1]
+
+n_atoms_for_each_type_of_mol = np.multiply(n_mols_of_each_type,n_atoms_in_each_mol)
+print(n_atoms_for_each_type_of_mol)
+sum = np.sum(n_atoms_for_each_type_of_mol)
+print(sum)
+
+# for i, n_mols in enumerate(n_mols_of_each_type[::-1]):
+#     print(i, n_mols, n_mols_of_each_type[-1-i])
+
+def calc_atom_type(data, n_mols, n_atoms):
+    total_n_atoms = np.multiply(n_mols, n_atoms)
+    transformer = np.ones((len(total_n_atoms), len(total_n_atoms)),int)
+    transformer = np.tril(transformer, 0)
+    atom_type_cutoff = np.matmul(transformer, total_n_atoms)
+
+    for n in range(np.shape(data)[0]):
+        for i, cutoff in enumerate(atom_type_cutoff):
+            if data[n][0] <= cutoff:
+                data[n][0] = (data[n][0] - cutoff) % n_atoms[i]
+                if data[n][0] == 0:
+                    data[n][0] = n_atoms[i]
+                if i > 0:
+                    data[n][0] += np.sum(n_atoms[:i])
+                break
+    return data
+
+# print(calc_atom_type(4311, n_mols_of_each_type, n_atoms_in_each_mol))
+
+Dump = list(parse_lammps_dumps(filename))[0]
+df = Dump.data[['id', 'type', 'x', 'y', 'z']]
+df = df.sort_values(by=['id'])
+print(df.head(10))
+data = df.tail(50).values
+print(np.shape(data))
+print(data)
+data = calc_atom_type(data, n_mols_of_each_type, n_atoms_in_each_mol)
+print(data)
+
+
 def calc_rdf(r_cut,bin_size,check_n_atoms,ntypes,Mass,n_part_rdfs,Atom_types,filename):
     ''''''
     n_bins = int(r_cut/bin_size) # may want to write function to ensure that r_cut is a multiple of bin_size
@@ -252,13 +294,14 @@ def calc_rdf(r_cut,bin_size,check_n_atoms,ntypes,Mass,n_part_rdfs,Atom_types,fil
 
         rho_n_pairs = np.zeros(n_part_rdfs)
         atomtypes = df.type.value_counts().to_dict()
+        # print(atomtypes)
         setID = set(atomtypes.keys())
         if ntypes != len(setID):
             raise Exception(f"""Consistency check failed:
                         Number of atomic types in the config file is
                         different from the corresponding value in input file
                         ntypes=: {ntypes}, nset=: {len(setID)}""")
-        massT = sum([float(Mass[i]) * float(atomtypes[i + 1]) for i in range(ntypes)])
+        massT = np.sum([float(Mass[i]) * float(atomtypes[i + 1]) for i in range(ntypes)])
         densT = float((massT / volume) * ConConstant)
         print('{0:s}{1:10.8f}'.format('Average density=:', float(densT)))
         rho = n_atoms / volume
@@ -269,6 +312,8 @@ def calc_rdf(r_cut,bin_size,check_n_atoms,ntypes,Mass,n_part_rdfs,Atom_types,fil
                 raise Exception('Error: Density is zero for atom type: ' + str(atom_type))
         Radii = (np.arange(n_bins) + 0.5) * bin_size
         data = df.values
+        print(type(data))
+        print(data)
         Rdf_full = np.zeros(n_bins)
         Rdf_part = np.zeros((n_part_rdfs, n_bins))
         st = time()

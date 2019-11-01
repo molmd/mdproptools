@@ -1,0 +1,22 @@
+Cut-off distance in LAMMPS units
+5.000
+Bin size for RDF calcs in LAMMPS units
+0.20
+# of atoms
+35253
+# of atom types
+12
+
+Atomic masses
+14.010 12.010 12.010 12.010 1.008 16.000 32.060 16.000 1.008 16.000 1.008 22.990
+# of partial RDFs to compute
+5
+
+Atomic types for which partial RDF is to be computed
+12 12 12 12 12
+ 1  6  8 10 12
+
+multi/single and dump file name
+multi dump.0.5_dhps_2.5_naoh_spce.nvt_298.15K.
+Working directory
+./

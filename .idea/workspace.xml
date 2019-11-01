@@ -2,25 +2,19 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e7761c98-bd53-4de7-b939-47c09b8e3b22" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/dump.0.5M_dhps_2.5M_na_1M_oh.nvt_298.15K.0.lammpstrj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/dump.0.5M_dhps_2.5M_na_1M_oh.nvt_298.15K.10000000.lammpstrj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/dump.0.5M_dhps_2.5M_na_1M_oh.nvt_298.15K.15000000.lammpstrj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/dump.0.5M_dhps_2.5M_na_1M_oh.nvt_298.15K.20000000.lammpstrj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/dump.0.5M_dhps_2.5M_na_1M_oh.nvt_298.15K.5000000.lammpstrj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/input.dat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/rdf.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/rdf_11.dat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/rdf_121.dat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/rdf_1210.dat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/rdf_1212.dat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/rdf_126.dat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/rdf_128.dat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/rdf_66.dat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/rdf_full.dat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/structural/Test_files/rdf_testing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/structural/rdf_speeded.py" beforeDir="false" afterPath="$PROJECT_DIR$/structural/rdf_speeded.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/Test_files/input.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/Test_files/rdf.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/Test_files/rdf_11.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/Test_files/rdf_121.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/Test_files/rdf_1210.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/Test_files/rdf_1212.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/Test_files/rdf_126.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/Test_files/rdf_128.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/Test_files/rdf_66.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/Test_files/rdf_full.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/Test_files/rdf_testing.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/structural/rdf_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/structural/rdf_functions.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -33,83 +27,48 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/structural/rdf_speeded.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-57">
-              <caret line="20" column="50" lean-forward="true" selection-start-line="20" selection-start-column="50" selection-end-line="20" selection-end-column="50" />
+            <state relative-caret-position="70">
+              <caret line="86" column="4" selection-start-line="86" selection-start-column="4" selection-end-line="86" selection-end-column="29" />
+              <folding>
+                <element signature="e#332#341#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/structural/Test_files/README.md">
-          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-            <state split_layout="SPLIT">
-              <first_editor>
-                <caret column="351" selection-start-column="351" selection-end-column="351" />
-              </first_editor>
-              <second_editor />
+        <entry file="file://$PROJECT_DIR$/structural/Test_files/New_Atomtype_Testing/Test_New_Atomtype_Functions.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="450">
+              <caret line="30" column="15" lean-forward="true" selection-start-line="30" selection-start-column="15" selection-end-line="30" selection-end-column="15" />
+              <folding>
+                <element signature="e#338#347#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../raj_lab_pymatgen/pymatgen/io/lammps/outputs.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="223">
+              <caret line="164" column="4" selection-start-line="164" selection-start-column="4" selection-end-line="164" selection-end-column="4" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_testing.py">
+        <entry file="file://$PROJECT_DIR$/../../raj_lab_pymatgen/pymatgen/io/gaussian.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="4" column="93" selection-start-line="4" selection-start-column="93" selection-end-line="4" selection-end-column="93" />
-              <folding>
-                <element signature="e#311#317#0" expanded="true" />
-              </folding>
-            </state>
+            <state relative-caret-position="-7466" />
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/outputs.py">
+        <entry file="file://$PROJECT_DIR$/structural/rdf_new_atomtypes_functions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-63">
-              <caret line="140" column="4" selection-start-line="140" selection-start-column="4" selection-end-line="140" selection-end-column="4" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/tests/test_data.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="270">
-              <caret line="18" column="4" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="4" />
-              <folding>
-                <element signature="e#109#124#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/structural/rdf_functions.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="158">
-              <caret line="121" selection-start-line="121" selection-end-line="121" selection-end-column="21" />
-              <folding>
-                <element signature="e#271#280#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/data.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2415">
-              <caret line="176" column="19" selection-start-line="176" selection-start-column="19" selection-end-line="176" selection-end-column="19" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/core/lattice.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15">
-              <caret line="44" column="8" selection-start-line="44" selection-start-column="8" selection-end-line="44" selection-end-column="8" />
+            <state relative-caret-position="299">
+              <caret line="20" column="48" selection-start-line="20" selection-start-column="48" selection-end-line="20" selection-end-column="48" />
             </state>
           </provider>
         </entry>
@@ -154,11 +113,14 @@
         <option value="$PROJECT_DIR$/__init__.py" />
         <option value="$PROJECT_DIR$/structural/rdf_speeded.py" />
         <option value="$PROJECT_DIR$/structural/Test_files/rdf_testing.py" />
+        <option value="$PROJECT_DIR$/structural/Test_files/New_Atomtype_Testing/Test_New_Atomtype_Functions.py" />
+        <option value="$PROJECT_DIR$/structural/rdf_new_atomtypes_functions.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="y" value="23" />
+    <option name="x" value="-1468" />
+    <option name="y" value="11" />
     <option name="width" value="1440" />
     <option name="height" value="802" />
   </component>
@@ -184,6 +146,20 @@
               <item name="analysis" type="462c0819:PsiDirectoryNode" />
               <item name="structural" type="462c0819:PsiDirectoryNode" />
               <item name="Test_files" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="analysis" type="b2602c69:ProjectViewProjectNode" />
+              <item name="analysis" type="462c0819:PsiDirectoryNode" />
+              <item name="structural" type="462c0819:PsiDirectoryNode" />
+              <item name="Test_files" type="462c0819:PsiDirectoryNode" />
+              <item name="New_Atomtype_Testing" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="analysis" type="b2602c69:ProjectViewProjectNode" />
+              <item name="analysis" type="462c0819:PsiDirectoryNode" />
+              <item name="structural" type="462c0819:PsiDirectoryNode" />
+              <item name="Test_files" type="462c0819:PsiDirectoryNode" />
+              <item name="Speeded_Testing" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -213,7 +189,28 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.rdf_testing">
+  <component name="RunManager" selected="Python.Test_New_Atomtype_Functions">
+    <configuration name="Test_New_Atomtype_Functions" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="analysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/structural/Test_files/New_Atomtype_Testing" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/structural/Test_files/New_Atomtype_Testing/Test_New_Atomtype_Functions.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="rdf_functions" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="analysis" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -256,6 +253,27 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="rdf_testing (1)" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="analysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/structural/Test_files/Speeded_Testing" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/structural/Test_files/Speeded_Testing/rdf_testing.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="rdf_testing" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="analysis" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -279,6 +297,8 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.Test_New_Atomtype_Functions" />
+        <item itemvalue="Python.rdf_testing (1)" />
         <item itemvalue="Python.rdf_testing" />
         <item itemvalue="Python.rdf_speeded" />
         <item itemvalue="Python.rdf_functions" />
@@ -299,15 +319,15 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1440" height="802" extended-state="0" />
+    <frame x="-1468" y="11" width="1440" height="802" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.28755364" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.29613733" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.4887324" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.26478875" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -342,91 +362,27 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_1212.dat">
+    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_1212.dat" />
+    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/data.py" />
+    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf.csv" />
+    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_66.dat" />
+    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_full.dat" />
+    <entry file="file://$PROJECT_DIR$/structural/Test_files/input.dat" />
+    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/core/lattice.py" />
+    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_11.dat" />
+    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/tests/test_data.py" />
+    <entry file="file://$PROJECT_DIR$/__init__.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/data.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2415">
-          <caret line="176" column="19" selection-start-line="176" selection-start-column="19" selection-end-line="176" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf.csv">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="206">
-          <caret line="50" column="30" lean-forward="true" selection-start-line="50" selection-start-column="30" selection-end-line="50" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_11.dat">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-502" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_66.dat">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-502" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_full.dat">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-502" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/structural/Test_files/input.dat">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="5" lean-forward="true" selection-start-line="5" selection-start-column="5" selection-end-line="5" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/core/lattice.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="44" column="8" selection-start-line="44" selection-start-column="8" selection-end-line="44" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_11.dat">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1252" />
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/outputs.py" />
+    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_testing.py" />
     <entry file="file://$PROJECT_DIR$/structural/Test_files/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
           <first_editor>
-            <caret column="351" selection-start-column="351" selection-end-column="351" />
+            <caret column="87" selection-start-column="87" selection-end-column="87" />
           </first_editor>
           <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/tests/test_data.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="18" column="4" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="4" />
-          <folding>
-            <element signature="e#109#124#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/outputs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-63">
-          <caret line="140" column="4" selection-start-line="140" selection-start-column="4" selection-end-line="140" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/structural/rdf_speeded.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-57">
-          <caret line="20" column="50" lean-forward="true" selection-start-line="20" selection-start-column="50" selection-end-line="20" selection-end-column="50" />
         </state>
       </provider>
     </entry>
@@ -434,20 +390,53 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="158">
           <caret line="121" selection-start-line="121" selection-end-line="121" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/structural/Test_files/New_Atomtype_Testing/Test_New_Atomtype_Functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="450">
+          <caret line="30" column="15" lean-forward="true" selection-start-line="30" selection-start-column="15" selection-end-line="30" selection-end-column="15" />
           <folding>
-            <element signature="e#271#280#0" expanded="true" />
+            <element signature="e#338#347#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_testing.py">
+    <entry file="file://$PROJECT_DIR$/structural/Test_files/Speeded_Testing/rdf_testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="93" selection-start-line="4" selection-start-column="93" selection-end-line="4" selection-end-column="93" />
+        <state relative-caret-position="315">
+          <caret line="23" column="15" selection-start-line="23" selection-start-column="15" selection-end-line="23" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/structural/rdf_speeded.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="70">
+          <caret line="86" column="4" selection-start-line="86" selection-start-column="4" selection-end-line="86" selection-end-column="29" />
           <folding>
-            <element signature="e#311#317#0" expanded="true" />
+            <element signature="e#332#341#0" expanded="true" />
           </folding>
         </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/structural/rdf_new_atomtypes_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="299">
+          <caret line="20" column="48" selection-start-line="20" selection-start-column="48" selection-end-line="20" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../raj_lab_pymatgen/pymatgen/io/lammps/outputs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="223">
+          <caret line="164" column="4" selection-start-line="164" selection-start-column="4" selection-end-line="164" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../raj_lab_pymatgen/pymatgen/io/gaussian.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-7466" />
       </provider>
     </entry>
   </component>
