@@ -118,11 +118,11 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
-    <option name="x" value="-1468" />
-    <option name="y" value="11" />
-    <option name="width" value="1440" />
-    <option name="height" value="802" />
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="-424" />
+    <option name="y" value="23" />
+    <option name="width" value="1441" />
+    <option name="height" value="824" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -167,6 +167,9 @@
       </pane>
       <pane id="Scope" />
     </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -295,6 +298,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <list>
+      <item itemvalue="Python.Test_New_Atomtype_Functions" />
+      <item itemvalue="Python.rdf_functions" />
+      <item itemvalue="Python.rdf_speeded" />
+      <item itemvalue="Python.rdf_testing" />
+      <item itemvalue="Python.rdf_testing (1)" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.Test_New_Atomtype_Functions" />
@@ -347,7 +357,7 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/tests/test_data.py</url>
+          <url>file://$USER_HOME$/raj_lab_pymatgen/pymatgen/io/lammps/tests/test_data.py</url>
           <line>3</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
@@ -363,18 +373,18 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_1212.dat" />
-    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/data.py" />
+    <entry file="file://$USER_HOME$/raj_lab_pymatgen/pymatgen/io/lammps/data.py" />
     <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf.csv" />
     <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_66.dat" />
     <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_full.dat" />
     <entry file="file://$PROJECT_DIR$/structural/Test_files/input.dat" />
-    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/core/lattice.py" />
+    <entry file="file://$USER_HOME$/raj_lab_pymatgen/pymatgen/core/lattice.py" />
     <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_11.dat" />
-    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/tests/test_data.py" />
+    <entry file="file://$USER_HOME$/raj_lab_pymatgen/pymatgen/io/lammps/tests/test_data.py" />
     <entry file="file://$PROJECT_DIR$/__init__.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/../raj_lab_pymatgen/pymatgen/io/lammps/outputs.py" />
+    <entry file="file://$USER_HOME$/raj_lab_pymatgen/pymatgen/io/lammps/outputs.py" />
     <entry file="file://$PROJECT_DIR$/structural/Test_files/rdf_testing.py" />
     <entry file="file://$PROJECT_DIR$/structural/Test_files/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
