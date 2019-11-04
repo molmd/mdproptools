@@ -23,12 +23,22 @@ from timeit import default_timer as timer
 
 @njit(cache=True)
 def main_loop(data, relation_matrix, n_a_pairs, Lengths, rcut, ddr, RDF_FULL, RDF_P):
-
     """
-    This function saves the data into a 2d array with column (0) as the id,
-    column (2) as type, columns (3, 4, 5) as x, y, and z, column (5) as rsq 
-    and column (6) as the bin number. The main for loop is compiled before 
-    the code is executed. 
+    This function calculates full and partial rdf based on LAMMPS dump files. Currently only calculates the partial rdfs
+    based on LAMMPS atom types. Works for both single and multiple LAMMPS dump files. The main for loop is compiled
+    before the code is executed.
+    :param data: (array-like) LAMMPS dump data as a 2d array with column (0) as the id,
+    column (2) as type, and columns (3, 4, 5) as x, y, and z
+    :param relation_matrix: (array-like) 2d array with column (0) as the first atom types and column (1)
+    as the corresponding atom types for which the partial RDFs are computed
+    :param n_a_pairs: (int) The number of partial rdfs to calculate
+    :param Lengths: (list) Box dimensions in x, y, z directions
+    :param rcut: (float or int) Maximum radius for which rdf is calculated in LAMMPS units
+    :param ddr: (float) Bin size of the histogram in LAMMPS units
+    :param RDF_FULL: (array-like) 1d array of zeros of size of the number of bins
+    :param RDF_P: (array-like) 2d array of zeros of size of number of partial rdfs by number of bins
+    :return: (array-like) RDF_Full: 1d array with computed full rdf
+    :return: (array-like) RDF_P: 2d array with computed partial rdf between each atom pair
     """
     Lx = Lengths[0]
     Ly = Lengths[1]
@@ -65,6 +75,7 @@ def main_loop(data, relation_matrix, n_a_pairs, Lengths, rcut, ddr, RDF_FULL, RD
                 for j in v_j[:, 6].astype(np.int64):
                     RDF_P[kl][j] += 1
     return RDF_FULL, RDF_P
+
 
 def calc_rdf(r_cut,bin_size,check_n_atoms,ntypes,Mass,n_part_rdfs,Atom_types,filename):
     '''
