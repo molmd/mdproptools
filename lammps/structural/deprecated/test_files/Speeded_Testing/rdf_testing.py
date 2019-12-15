@@ -29,7 +29,7 @@ filename = '../dump.0.5M_dhps_2.5M_na_1M_oh.nvt_298.15K.*'
 # # # For troubleshooting problems with parse_lammps_dumps()
 # pathdir = os.getcwd()
 # print(pathdir)
-# # path_to_file = os.path.join(pathdir,'Test_files',filename)
+# # path_to_file = os.path.join(pathdir,'test_files',filename)
 # # print(path_to_file)
 #
 # files = glob.glob(filename)
