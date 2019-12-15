@@ -9,11 +9,11 @@ from pymatgen.io.lammps.outputs import parse_lammps_dumps
 
 """
 This module calculates radial distribution function (rdf) and coordination 
-number from LAMMPS trajectory files.
+number (cn) from LAMMPS trajectory files.
 """
 
 __author__ = "Rasha Atwi, Matthew Bliss, Maxim Makeev"
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 __email__ = "rasha.atwi@tufts.edu, matthew.bliss@tufts.edu, " \
             "maxim.makeev@tufts.edu"
 __date__ = "Dec 1, 2019"
