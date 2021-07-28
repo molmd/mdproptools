@@ -57,12 +57,12 @@ def main_loop(data, relation_matrix, n_a_pairs, Lengths, rcut, ddr, RDF_FULL, RD
             RDF_FULL[j] += 2
         for kl in range(0, n_a_pairs):
             nta1, nta2 = relation_matrix[kl]
-            if data_head[1] == nta1:
-                v_j = data_i[data_i[:, 1] == nta2]
+            if int(data_head[0]) == nta1:
+                v_j = data_i[data_i[:, 0].astype(np.int64) == nta2]
                 for j in v_j[:, 6].astype(np.int64):
                     RDF_P[kl][j] += 1
-            if data_head[1] == nta2:
-                v_j = data_i[data_i[:, 1] == nta1]
+            if int(data_head[0]) == nta2:
+                v_j = data_i[data_i[:, 0].astype(np.int64) == nta1]
                 for j in v_j[:, 6].astype(np.int64):
                     RDF_P[kl][j] += 1
     return RDF_FULL, RDF_P
@@ -126,126 +126,40 @@ end = timer()
 print('Reading input file:')
 print(end-start)
 
-# # This reads all dump files in the current directory, and sets them as LammpsDump objects in a generator
-# start = timer()
-# Dumps = list(parse_lammps_dumps(filename+'*'))
-# end = timer()
-# print('Parsing dump files:')
-# print(str(end - start))
-# # Dumps is generator
-# # 3.668e-06 s for   5 files: 7.336e-07 s per file
-# # 1.663e-06 s for 801 files: 2.076e-09 s per file
-# # Dumps is list
-# # 1.030 s     for   5 files: 0.206 s per file
-# # 148.6 s     for 801 files: 0.186 s per file
-#
-# print(len(Dumps))
-#
-# # # # Testing for how long it takes to iterate over generator object of dumps
-# # iter = 0
-# # start = timer()
-# # for Dump in Dumps:
-# #     # print(Dump.timestep)
-# #     iter += 1
-# # end = timer()
-# # print('Number of dump files:')
-# # print(iter)
-# # print('Iterating over dump files:')
-# # print(end-start)
-# # # 1.066 s for   5 files: 0.2132 s per file
-# # # 148.3 s for 801 files: 0.1851 s per file
-#
-# Dump_0 = Dumps[0]
-# print(type(Dump_0.box))
-# print(type(Dump_0.box.bounds))
-# x_0 = Dump_0.box.bounds[0][1] - Dump_0.box.bounds[0][0]
-# y_0 = Dump_0.box.bounds[1][1] - Dump_0.box.bounds[1][0]
-# z_0 = Dump_0.box.bounds[2][1] - Dump_0.box.bounds[2][0]
-# print(str(x_0) + ', ' + str(y_0) + ', ' + str(z_0))
-# print(Dump_0.box.to_lattice().lengths)
-# print(np.prod(Dump_0.box.to_lattice().lengths))
-# print(x_0 * y_0 * z_0)
-
-
 # # Defined inputs
-r_cut = 20
+r_cut = 10
 bin_size = 0.2
 check_n_atoms = 35253
 ntypes = 12
 mass = [14.010, 12.010, 12.010, 12.010, 1.008, 16.000, 32.060, 16.000, 1.008, 16.000, 1.008, 22.990]
-nrdfs = 7
-atom_types = [[12, 12, 12, 12, 12, 6, 1],
-              [ 1,  6,  8, 10, 12, 6, 1]]
+nrdfs = 10
+atom_types = [[31, 31, 31, 31, 31, 31, 31, 31, 31, 31],
+              [ 1,  2, 16, 20, 21, 24, 25, 26, 29, 31]]
 filename = 'dump.0.5M_dhps_2.5M_na_1M_oh.nvt_298.15K.*'
 filename = 'dump.0.5M_dhps_2.5M_na_1M_oh.nvt_298.15K.0.lammpstrj'
 workdir = './'
 os.chdir(workdir0)
 
-print(np.asarray(atom_types).shape)
-
-# Ref_atoms = np.asarray(atom_types[0]).reshape((len(atom_types[0]),1))
-# print(Ref_atoms)
-# Ref_atoms_matrix = np.tile(Ref_atoms,int(r_cut/bin_size))
-# print(Ref_atoms_matrix)
-# Atom_dict = {9: 21122, 8: 10561, 2: 840, 12: 525, 6: 525, 5: 525, 11: 210, 10: 210, 4: 210, 3: 210, 1: 210, 7: 105}
-# n_atoms_matrix = np.vectorize(Atom_dict.get)(Ref_atoms_matrix)
-# print(n_atoms_matrix)
-
-
-# nbins = int(r_cut/bin_size)
-# Radius = (np.arange(nbins) + 0.5) * bin_size
-# print(Radius)
-#
-# RDF_COOR = []
-# for i in range(0, nbins):
-#     rr = float(bin_size * (float(i) + float(0.5)))
-#     RDF_COOR.append(rr)
-#
-# # print(RDF_COOR)
-#
-# # print(np.arange(1,nbins + 1))
-# # print(np.arange(1,nbins + 1) ** 3)
-# # print(np.arange(nbins) ** 3)
-# SHELL_VOL = (np.arange(1,nbins + 1) ** 3 - np.arange(nbins) ** 3)
-# # print(SHELL_VOL)
-# # print(SHELL_VOL/(np.arange(1,nbins + 1) ** 3))
-#
-# Rdf_full = np.zeros((1,nbins))
-# Rdf_part = np.ones((nrdfs,nbins))
-# print(Rdf_full)
-# print(Rdf_part)
-# # print(Rdf_part,'\n')
-# Check_partial = np.tile(Rdf_full,(nrdfs,1))
-# # print(Check_partial)
-# # print(np.array_equal(Rdf_part,Check_partial))
-# # print(np.tile(RDF_COOR,(nrdfs,1)))
-#
-# print(np.shape(Rdf_full))
-# print(np.shape(Rdf_part))
-#
-# Final_data_array = np.vstack((Radius,Rdf_full,Rdf_part))
-# print(Final_data_array.transpose())
-#
-# relation_matrix = np.asarray(atom_types).transpose()
-# Final_data_labels = ['r [Angst]','g_full(r)'] + ['g_' + str(Pair[0]) + '-' + str(Pair[1]) + '(r)' for Pair in relation_matrix]
-# print(Final_data_labels)
-#
-# Final_data_frame = pd.DataFrame(Final_data_array.transpose(),columns=Final_data_labels)
-# print(Final_data_frame)
 
 n_types_of_mols = 4
 n_mols_of_each_type = [105, 10561, 210, 525]
 n_atoms_in_each_mol = [25, 3, 2, 1]
 
-n_atoms_for_each_type_of_mol = np.multiply(n_mols_of_each_type,n_atoms_in_each_mol)
-print(n_atoms_for_each_type_of_mol)
-sum = np.sum(n_atoms_for_each_type_of_mol)
-print(sum)
-
-# for i, n_mols in enumerate(n_mols_of_each_type[::-1]):
-#     print(i, n_mols, n_mols_of_each_type[-1-i])
+# n_atoms_for_each_type_of_mol = np.multiply(n_mols_of_each_type,n_atoms_in_each_mol)
+# print(n_atoms_for_each_type_of_mol)
+# sum = np.sum(n_atoms_for_each_type_of_mol)
+# print(sum)
 
 def calc_atom_type(data, n_mols, n_atoms):
+    '''
+    Converts the id column from atom ids to the new atom type
+    :param data: (np.Array) Array created from data frame from Dump object with columns in the following order:
+        ['id','type','x','y','z']
+    :param n_mols: (array-like) The number of molecules for each molecular species. Should be consistent with
+        PackmolRunner input.
+    :param n_atoms: (array-like) The number of atoms in each molecular species.
+    :return: data (np.Array) The altered input array.
+    '''
     total_n_atoms = np.multiply(n_mols, n_atoms)
     transformer = np.ones((len(total_n_atoms), len(total_n_atoms)),int)
     transformer = np.tril(transformer, 0)
@@ -268,14 +182,14 @@ Dump = list(parse_lammps_dumps(filename))[0]
 df = Dump.data[['id', 'type', 'x', 'y', 'z']]
 df = df.sort_values(by=['id'])
 print(df.head(10))
-data = df.tail(50).values
+data = df.head(50).values
 print(np.shape(data))
 print(data)
 data = calc_atom_type(data, n_mols_of_each_type, n_atoms_in_each_mol)
 print(data)
 
 
-def calc_rdf(r_cut,bin_size,check_n_atoms,ntypes,Mass,n_part_rdfs,Atom_types,filename):
+def calc_rdf(r_cut, bin_size, check_n_atoms, ntypes, Mass, n_part_rdfs, Atom_types,filename, nmols=None, natoms_per_mol=None):
     ''''''
     n_bins = int(r_cut/bin_size) # may want to write function to ensure that r_cut is a multiple of bin_size
     Rdf_full_sum = np.zeros(n_bins)
@@ -288,15 +202,19 @@ def calc_rdf(r_cut,bin_size,check_n_atoms,ntypes,Mass,n_part_rdfs,Atom_types,fil
         start_traj_loop = timer()
         print('The timestep of the current file is: ' + str(Dump.timestep))
         df = Dump.data[['id', 'type', 'x', 'y', 'z']]
+        print(df.head(10))
         n_atoms = df.shape[0]
         Box_lengths = Dump.box.to_lattice().lengths
         volume = np.prod(Box_lengths)
-
+        data = df.values
+        data = calc_atom_type(data,nmols,natoms_per_mol)
+        df = pd.DataFrame(data,columns=['id', 'type', 'x', 'y', 'z'])
+        print(df.head(10))
         rho_n_pairs = np.zeros(n_part_rdfs)
-        atomtypes = df.type.value_counts().to_dict()
-        # print(atomtypes)
+        atomtypes = df.id.astype(np.int64).value_counts().to_dict()
+        print(atomtypes)
         setID = set(atomtypes.keys())
-        if ntypes != len(setID):
+        if np.sum(natoms_per_mol) != len(setID):
             raise Exception(f"""Consistency check failed:
                         Number of atomic types in the config file is
                         different from the corresponding value in input file
@@ -306,14 +224,14 @@ def calc_rdf(r_cut,bin_size,check_n_atoms,ntypes,Mass,n_part_rdfs,Atom_types,fil
         print('{0:s}{1:10.8f}'.format('Average density=:', float(densT)))
         rho = n_atoms / volume
         relation_matrix = np.asarray(Atom_types).transpose()
+        print(relation_matrix)
         for index, atom_type in enumerate(Atom_types[1]):
             rho_n_pairs[index] = atomtypes[atom_type] / volume
             if rho_n_pairs[index] < 1.0e-22:
                 raise Exception('Error: Density is zero for atom type: ' + str(atom_type))
         Radii = (np.arange(n_bins) + 0.5) * bin_size
-        data = df.values
-        print(type(data))
-        print(data)
+        # data = df.values
+        # data = calc_atom_type(data,nmols,natoms_per_mol)
         Rdf_full = np.zeros(n_bins)
         Rdf_part = np.zeros((n_part_rdfs, n_bins))
         st = time()
@@ -377,10 +295,10 @@ def calc_rdf(r_cut,bin_size,check_n_atoms,ntypes,Mass,n_part_rdfs,Atom_types,fil
     Final_data_array = np.vstack((Radii,Rdf_full_sum,Rdf_part_sum)).transpose()
     Final_data_labels = ['r [Angst]','g_full(r)'] + ['g_' + str(Pair[0]) + '-' + str(Pair[1]) + '(r)' for Pair in relation_matrix]
     Final_data_frame = pd.DataFrame(Final_data_array, columns=Final_data_labels)
-    print(Final_data_frame)
-    Final_data_frame.to_csv(path_or_buf='rdf.csv',index=False)
+    # print(Final_data_frame)
+    Final_data_frame.to_csv(path_or_buf='rdf.csv', index=False)
 
     print("Full RDF and partial RDFs are written to rdf.csv file")
     return Final_data_frame
 
-# calc_rdf(r_cut,bin_size,check_n_atoms,ntypes,mass,nrdfs,atom_types,filename)
+rdf_data = calc_rdf(r_cut, bin_size, check_n_atoms, n_mols_of_each_type, n_atoms_in_each_mol, ntypes, mass, nrdfs, atom_types, filename)

@@ -26,6 +26,7 @@ def calc_number_density(dump_pattern, surface_atom, atom_types, bin_size,
                         num_atoms_per_mol=None, working_dir=None,
                         results_file='number_density.csv', save_mode=True):
     # assumes the surface is composed of one atom type
+    # TODO: allow center of mass calculations
     if not working_dir:
         working_dir = os.getcwd()
     partial_relations = np.array((np.full(shape=len(atom_types),
@@ -51,7 +52,6 @@ def calc_number_density(dump_pattern, surface_atom, atom_types, bin_size,
         else:
             ref_df = ref_df.drop('id', axis=1)
             atom_types_col = 'type'
-
         # Calculate the distance range occupied by the surface atom in the
         # provided direction
         min_dist = ref_df[
@@ -74,7 +74,7 @@ def calc_number_density(dump_pattern, surface_atom, atom_types, bin_size,
         print("time:", time() - st)
         print("Finished computing density profile for timestep", dump.timestep)
 
-        # Normalize the computed density profiles
+        # Normalize the computed density profiles by dividing by bin volume
         box_lengths = dump.box.to_lattice().lengths
         box_lengths_dict = {"x": box_lengths[0],
                             "y": box_lengths[1],
