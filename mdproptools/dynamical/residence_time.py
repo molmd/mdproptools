@@ -12,6 +12,13 @@ from pymatgen.io.lammps.outputs import parse_lammps_dumps
 
 from mdproptools.structural.rdf_cn import _calc_rsq
 
+__author__ = "Rasha Atwi"
+__maintainer__ = "Rasha Atwi"
+__email__ = "rasha.atwi@stonybrook.edu"
+__status__ = "Development"
+__date__ = "Mar 2021"
+__version__ = "0.0.1"
+
 
 # TODO: move this to a common module
 def _set_axis(ax, axis="both"):

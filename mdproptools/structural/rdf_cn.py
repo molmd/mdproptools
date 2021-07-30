@@ -16,9 +16,11 @@ number (cn) from LAMMPS trajectory files.
 """
 
 __author__ = "Rasha Atwi, Matthew Bliss, Maxim Makeev"
-__version__ = "0.5.1"
-__email__ = "rasha.atwi@tufts.edu, matthew.bliss@tufts.edu, " "maxim.makeev@tufts.edu"
-__date__ = "Dec 1, 2019"
+__maintainer__ = "Rasha Atwi"
+__email__ = "rasha.atwi@stonybrook.edu"
+__status__ = "Development"
+__date__ = "Dec 2019"
+__version__ = "0.0.1"
 
 CON_CONSTANT = 1.660538921
 

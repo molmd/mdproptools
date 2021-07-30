@@ -5,9 +5,11 @@ from scipy import integrate
 import mdproptools.common.constants as cnst
 
 __author__ = "Matthew Bliss"
-__version__ = "0.1"
-__email__ = "Matthew.Bliss@tufts.edu"
-__date__ = "Jun 10, 2020"
+__maintainer__ = "Matthew Bliss"
+__email__ = "matthew.bliss@stonybrook.edu"
+__status__ = "Development"
+__date__ = "Jun 2020"
+__version__ = "0.0.1"
 
 
 TENSOR_LABELS = ["Pxy", "Pxz", "Pyz"]

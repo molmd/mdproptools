@@ -1,7 +1,10 @@
 __author__ = "Matthew Bliss"
-__version__ = "0.0.1"
+__maintainer__ = "Matthew Bliss"
 __email__ = "matthew.bliss@stonybrook.edu"
-__date__ = "Jun 11, 2020"
+__status__ = "Development"
+__date__ = "Jun 2020"
+__version__ = "0.0.1"
+
 
 """
 This module contains scientific constants and conversion factors into SI units for 

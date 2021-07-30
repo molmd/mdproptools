@@ -11,6 +11,13 @@ from pymatgen.io.lammps.outputs import parse_lammps_dumps
 
 from mdproptools.dynamical.residence_time import _set_axis
 
+__author__ = "Rasha Atwi"
+__maintainer__ = "Rasha Atwi"
+__email__ = "rasha.atwi@stonybrook.edu"
+__status__ = "Development"
+__date__ = "Jan 2021"
+__version__ = "0.0.1"
+
 
 class Conductivity:
     def __init__(

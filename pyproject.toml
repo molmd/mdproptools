@@ -10,3 +10,4 @@ group_by_package = true
 force_alphabetical_sort_within_sections = true
 combine_straight_imports = true
 balanced_wrapping = true
+forced_separate = ["pymatgen", "mdproptools"]

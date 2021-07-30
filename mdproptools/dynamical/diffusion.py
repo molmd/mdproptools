@@ -8,9 +8,11 @@ import statsmodels.api as sm
 from pymatgen.io.lammps.outputs import parse_lammps_log, parse_lammps_dumps
 
 __author__ = "Rasha Atwi, Matthew Bliss"
-__version__ = "0.3"
-__email__ = "rasha.atwi@tufts.edu, Matthew.Bliss@tufts.edu"
-__date__ = "Apr 7, 2020"
+__maintainer__ = "Rasha Atwi"
+__email__ = "rasha.atwi@stonybrook.edu"
+__status__ = "Development"
+__date__ = "Apr 2020"
+__version__ = "0.0.1"
 
 
 def get_msd_from_dump(

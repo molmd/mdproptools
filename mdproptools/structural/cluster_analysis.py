@@ -17,9 +17,11 @@ into unique configurations.
 """
 
 __author__ = "Rasha Atwi, Maxim Makeev"
-__version__ = "0.1.1"
-__email__ = "rasha.atwi@tufts.edu, maxim.makeev@tufts.edu"
-__date__ = "Apr 28, 2020"
+__maintainer__ = "Rasha Atwi"
+__email__ = "rasha.atwi@stonybrook.edu"
+__status__ = "Development"
+__date__ = "Apr 2020"
+__version__ = "0.0.1"
 
 FORCE_CONSTANT = 0.043363 / 16.0
 

@@ -18,9 +18,11 @@ This module calculates number density (nd) from LAMMPS trajectory files.
 """
 
 __author__ = "Rasha Atwi, Maxim Makeev"
-__version__ = "0.1.1"
-__email__ = "rasha.atwi@tufts.edu, maxim.makeev@tufts.edu"
-__date__ = "May 22, 2020"
+__maintainer__ = "Rasha Atwi"
+__email__ = "rasha.atwi@stonybrook.edu"
+__status__ = "Development"
+__date__ = "May 2020"
+__version__ = "0.0.1"
 
 
 def calc_number_density(
