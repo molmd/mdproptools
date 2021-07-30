@@ -1,14 +1,8 @@
-__author__ = "Matthew Bliss"
-__maintainer__ = "Matthew Bliss"
-__email__ = "matthew.bliss@stonybrook.edu"
-__status__ = "Development"
-__date__ = "Jun 2020"
-__version__ = "0.0.1"
-
+#!/usr/bin/env python
 
 """
-This module contains scientific constants and conversion factors into SI units for 
-LAMMPS unit types. The constants are from:
+Contains scientific constants and conversion factors into SI units for LAMMPS units.
+The constants are from:
 BIPM. Le Système international d’unités / The International System of Units (‘The SI Brochure’).
     Bureau international des poids et mesures, ninth edition, 2019. URL
     http://www.bipm.org/en/si/si_brochure/, ISBN 978-92-822-2272-0.
@@ -17,6 +11,13 @@ BIPM. Le Système international d’unités / The International System of Units 
 "2018 CODATA Value: Hartree energy". The NIST Reference on Constants, Units, and Uncertainty. NIST.
     20 May 2019.
 """
+
+__author__ = "Matthew Bliss"
+__maintainer__ = "Matthew Bliss"
+__email__ = "matthew.bliss@stonybrook.edu"
+__status__ = "Development"
+__date__ = "Jun 2020"
+__version__ = "0.0.1"
 
 BOLTZMANN = 1.380649 * 10 ** -23  # J/K
 

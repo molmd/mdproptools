@@ -1,4 +1,9 @@
-# coding: utf-8
+#!/usr/bin/env python
+
+"""
+Calculates RDF and coordination numbers from LAMMPS trajectory files.
+"""
+
 from time import time
 from timeit import default_timer as timer
 

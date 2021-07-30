@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Calculates the number density from LAMMPS trajectory files.
+"""
+
 import os
 
 from time import time
@@ -12,10 +18,6 @@ from mdproptools.structural.rdf_cn import (
     _calc_atom_type,
     _define_dataframes,
 )
-
-"""
-This module calculates number density (nd) from LAMMPS trajectory files.
-"""
 
 __author__ = "Rasha Atwi, Maxim Makeev"
 __maintainer__ = "Rasha Atwi"

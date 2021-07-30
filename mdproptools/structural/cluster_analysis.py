@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Extracts clusters within a cutoff distance from an atom from LAMMPS trajectory files.
+"""
+
 import os
 import glob
 import shutil
@@ -9,12 +15,7 @@ from pymatgen.core.structure import Molecule
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
-from mdproptools.structural.rdf_cn import _calc_rsq, _calc_atom_type, _define_mol_cols
-
-"""
-This module extracts clusters from LAMMPS trajectory files and groups them 
-into unique configurations.
-"""
+from mdproptools.structural.rdf_cn import _calc_rsq, _calc_atom_type
 
 __author__ = "Rasha Atwi, Maxim Makeev"
 __maintainer__ = "Rasha Atwi"

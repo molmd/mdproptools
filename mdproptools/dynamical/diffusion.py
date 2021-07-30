@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Calculates diffusion coefficient using Einstein relation from LAMMPS trajectory files.
+"""
+
 import os
 import re
 import glob

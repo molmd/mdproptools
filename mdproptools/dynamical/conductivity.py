@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Calculates the ionic conductivity from LAMMPS trajectory files.
+"""
+
 import os
 
 import numpy as np

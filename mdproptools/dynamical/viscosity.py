@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Calculates viscosity using Green-Kubo relation from LAMMPS output data.
+"""
+
 import numpy as np
 
 from scipy import integrate
