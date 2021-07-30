@@ -1,11 +1,13 @@
 # coding: utf-8
-from timeit import default_timer as timer
 from time import time
+from timeit import default_timer as timer
 
-import pandas as pd
-import numpy as np
 import numba
+import numpy as np
+import pandas as pd
+
 from numba import njit, prange
+
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
 
 """
@@ -15,8 +17,7 @@ number (cn) from LAMMPS trajectory files.
 
 __author__ = "Rasha Atwi, Matthew Bliss, Maxim Makeev"
 __version__ = "0.5.1"
-__email__ = "rasha.atwi@tufts.edu, matthew.bliss@tufts.edu, " \
-            "maxim.makeev@tufts.edu"
+__email__ = "rasha.atwi@tufts.edu, matthew.bliss@tufts.edu, " "maxim.makeev@tufts.edu"
 __date__ = "Dec 1, 2019"
 
 CON_CONSTANT = 1.660538921
@@ -32,8 +33,10 @@ def _calc_rsq(data_head, mol_data, lx, ly, lz, num_of_ids=1):
     molecules.
     """
     data_i = np.zeros((mol_data.shape[0], mol_data.shape[1] + 2))
-    data_i[:, :num_of_ids + 3] = mol_data.copy()
-    data_i[:, num_of_ids:num_of_ids + 3] = data_head[num_of_ids:] - mol_data[:, num_of_ids:]
+    data_i[:, : num_of_ids + 3] = mol_data.copy()
+    data_i[:, num_of_ids : num_of_ids + 3] = (
+        data_head[num_of_ids:] - mol_data[:, num_of_ids:]
+    )
     dx = data_i[:, num_of_ids]
     dy = data_i[:, num_of_ids + 1]
     dz = data_i[:, num_of_ids + 2]
@@ -60,8 +63,9 @@ def _remove_outliers(data_i, rsq, r_cut, ddr):
 
 
 @numba.jit(cache=True, nopython=True, parallel=True)
-def _rdf_loop(data, relation_matrix, num_relations, lengths, r_cut, ddr,
-              rdf_full, rdf_part):
+def _rdf_loop(
+    data, relation_matrix, num_relations, lengths, r_cut, ddr, rdf_full, rdf_part
+):
     """
     Calculates full and partial rdf between two atoms from a single LAMMPS
     trajectory.
@@ -69,7 +73,7 @@ def _rdf_loop(data, relation_matrix, num_relations, lengths, r_cut, ddr,
     lx, ly, lz = lengths
     for i in prange(0, data.shape[0] - 1):
         data_head = data[i, :]
-        data_i, rsq = _calc_rsq(data_head, data[i + 1:, :], lx, ly, lz)
+        data_i, rsq = _calc_rsq(data_head, data[i + 1 :, :], lx, ly, lz)
         data_i = _remove_outliers(data_i, rsq, r_cut, ddr)
         for j in data_i[:, 5].astype(np.int64):
             rdf_full[j] += 2
@@ -95,7 +99,7 @@ def _cn_loop(data, relation_matrix, num_relations, lengths, r_cut, ddr, cn):
     lx, ly, lz = lengths
     for i in prange(0, data.shape[0] - 1):
         data_head = data[i, :]
-        data_i, rsq = _calc_rsq(data_head, data[i + 1:, :], lx, ly, lz)
+        data_i, rsq = _calc_rsq(data_head, data[i + 1 :, :], lx, ly, lz)
         for kl in prange(0, num_relations):
             nta1, nta2 = relation_matrix[kl]
             data_i_cond = _remove_outliers(data_i, rsq, r_cut[kl], ddr)
@@ -109,8 +113,9 @@ def _cn_loop(data, relation_matrix, num_relations, lengths, r_cut, ddr, cn):
 
 
 @numba.jit(cache=True, nopython=True, parallel=True)
-def _rdf_mol_loop(atom_data, mol_data, relation_matrix, num_relations, lengths,
-                  r_cut, ddr, rdf_part):
+def _rdf_mol_loop(
+    atom_data, mol_data, relation_matrix, num_relations, lengths, r_cut, ddr, rdf_part
+):
     """
     Calculates partial rdf between an atom and the center of mass of a molecule
     from a single LAMMPS trajectory.
@@ -130,8 +135,9 @@ def _rdf_mol_loop(atom_data, mol_data, relation_matrix, num_relations, lengths,
 
 
 @njit(cache=True)
-def _cn_mol_loop(atom_data, mol_data, relation_matrix, num_relations, lengths,
-                 r_cut, ddr, cn):
+def _cn_mol_loop(
+    atom_data, mol_data, relation_matrix, num_relations, lengths, r_cut, ddr, cn
+):
     """
     Calculates coordination number between an atom and the center of mass of a
     molecule from a single LAMMPS trajectory.
@@ -174,9 +180,9 @@ def _define_dataframes(dump):
     calculations.
     """
     start_traj_loop = timer()
-    print('The timestep of the current file is: ' + str(dump.timestep))
-    ref_df = dump.data[['id', 'type', 'x', 'y', 'z']]
-    ref_df = ref_df.sort_values('id')
+    print("The timestep of the current file is: " + str(dump.timestep))
+    ref_df = dump.data[["id", "type", "x", "y", "z"]]
+    ref_df = ref_df.sort_values("id")
     df = ref_df.copy()
     return start_traj_loop, ref_df, df
 
@@ -213,20 +219,32 @@ def _define_mol_cols(df, num_mols, num_atoms_per_mol, mass):
             for atom_id in range(num_atoms_per_mol[mol_type]):
                 mol_types.append(mol_type + 1)
                 mol_ids.append(mol_id + 1)
-    df['mol_type'] = mol_types
-    df['mol_id'] = mol_ids
-    df['mass'] = df.apply(lambda x: mass[int(x.type - 1)], axis=1)
-    df = df.drop(['type', 'id'], axis=1).set_index(['mol_type', 'mol_id'])
-    mol_df = df.groupby(['mol_type', 'mol_id']). \
-        apply(lambda x: pd.Series(x['mass'].values @ x[['x', 'y', 'z']].values /
-                                  x.mass.sum(), index=['x', 'y', 'z']))
-    return mol_df.reset_index(). \
-        drop('mol_id', axis=1). \
-        rename(columns={'mol_type': 'type'})
+    df["mol_type"] = mol_types
+    df["mol_id"] = mol_ids
+    df["mass"] = df.apply(lambda x: mass[int(x.type - 1)], axis=1)
+    df = df.drop(["type", "id"], axis=1).set_index(["mol_type", "mol_id"])
+    mol_df = df.groupby(["mol_type", "mol_id"]).apply(
+        lambda x: pd.Series(
+            x["mass"].values @ x[["x", "y", "z"]].values / x.mass.sum(),
+            index=["x", "y", "z"],
+        )
+    )
+    return (
+        mol_df.reset_index().drop("mol_id", axis=1).rename(columns={"mol_type": "type"})
+    )
 
 
-def _calc_props(dump, ref_df, df, num_types, mass, num_relations,
-                partial_relations, atom_types_col, num_atoms_per_mol=None):
+def _calc_props(
+    dump,
+    ref_df,
+    df,
+    num_types,
+    mass,
+    num_relations,
+    partial_relations,
+    atom_types_col,
+    num_atoms_per_mol=None,
+):
     """
     Calculates densities (total mass, total number, and partial number) and box
     lengths required for rdf and coordination number calculations.
@@ -234,46 +252,63 @@ def _calc_props(dump, ref_df, df, num_types, mass, num_relations,
     n_objects = df.shape[0]
     box_lengths = dump.box.to_lattice().lengths
     volume = np.prod(box_lengths)
-    atom_types = ref_df[atom_types_col].astype(
-        np.int64).value_counts().to_dict()
+    atom_types = ref_df[atom_types_col].astype(np.int64).value_counts().to_dict()
     object_types = df[atom_types_col].astype(np.int64).value_counts().to_dict()
     set_id = set(atom_types.keys())
-    if atom_types_col == 'type':
+    if atom_types_col == "type":
         if num_types != len(set_id):
-            raise ValueError(f"""Consistency check failed: Number of specified 
+            raise ValueError(
+                f"""Consistency check failed: Number of specified 
                             atomic types is different from the calculated value 
-                            specified= {num_types}, calculated= {len(set_id)}""")
-    elif atom_types_col == 'id':
+                            specified= {num_types}, calculated= {len(set_id)}"""
+            )
+    elif atom_types_col == "id":
         if np.sum(num_atoms_per_mol) != len(set_id):
-            raise ValueError(f"""Consistency check failed: Number of specified 
+            raise ValueError(
+                f"""Consistency check failed: Number of specified 
                             atomic types is different from the calculated value 
                             specified= {num_atoms_per_mol}, 
-                            calculated= {len(set_id)}""")
-    total_mass = np.sum([float(mass[i]) * float(atom_types[i + 1]) for i in
-                         range(num_types)])
+                            calculated= {len(set_id)}"""
+            )
+    total_mass = np.sum(
+        [float(mass[i]) * float(atom_types[i + 1]) for i in range(num_types)]
+    )
     print(total_mass)
     total_density = float((total_mass / volume) * CON_CONSTANT)
     print(total_density)
-    print('{0:s}{1:10.8f}'.format('Average density=', float(total_density)))
+    print("{0:s}{1:10.8f}".format("Average density=", float(total_density)))
 
     rho = n_objects / volume
     rho_pairs = np.zeros(num_relations)
     for index, object_type in enumerate(partial_relations[1]):
         rho_pairs[index] = object_types[object_type] / volume
         if rho_pairs[index] < 1.0e-22:
-            raise ValueError('Error: Density is zero for mol type: ' +
-                             str(object_type))
+            raise ValueError("Error: Density is zero for mol type: " + str(object_type))
     return rho, rho_pairs, box_lengths, atom_types, object_types
 
 
-def _normalize_rdf(bin_size, rho_pairs, atom_types, partial_relations,
-                   num_relations, num_bins, rdf_part, rdf_full=None,
-                   ref_df=None, rho=None):
+def _normalize_rdf(
+    bin_size,
+    rho_pairs,
+    atom_types,
+    partial_relations,
+    num_relations,
+    num_bins,
+    rdf_part,
+    rdf_full=None,
+    ref_df=None,
+    rho=None,
+):
     """
     Normalizes the full and partial rdf (atom-atom or atom-molecule).
     """
-    shell_volume = 4 / 3 * np.pi * bin_size ** 3 * \
-                   (np.arange(1, num_bins + 1) ** 3 - np.arange(num_bins) ** 3)
+    shell_volume = (
+        4
+        / 3
+        * np.pi
+        * bin_size ** 3
+        * (np.arange(1, num_bins + 1) ** 3 - np.arange(num_bins) ** 3)
+    )
     if rdf_full is not None:
         num_atoms = ref_df.shape[0]
         rdf_full = rdf_full / (num_atoms * rho * shell_volume)
@@ -281,11 +316,9 @@ def _normalize_rdf(bin_size, rho_pairs, atom_types, partial_relations,
     ref_atoms = np.asarray(partial_relations[0]).reshape((num_relations, 1))
     ref_atoms_matrix = np.tile(ref_atoms, num_bins)
     num_atoms_matrix = np.vectorize(atom_types.get)(ref_atoms_matrix)
-    rho_pairs_matrix = np.tile(rho_pairs.reshape((num_relations, 1)),
-                               num_bins)
+    rho_pairs_matrix = np.tile(rho_pairs.reshape((num_relations, 1)), num_bins)
     shell_volume_matrix = np.tile(shell_volume, (num_relations, 1))
-    rdf_part = rdf_part / (num_atoms_matrix * rho_pairs_matrix *
-                           shell_volume_matrix)
+    rdf_part = rdf_part / (num_atoms_matrix * rho_pairs_matrix * shell_volume_matrix)
     return rdf_full, rdf_part
 
 
@@ -298,22 +331,23 @@ def _normalize_cn(atom_types, partial_relations, cn):
     return cn
 
 
-def _save_rdf(radii, relation_matrix, path_or_buf, save_mode, rdf_part_sum,
-              rdf_full_sum=None):
+def _save_rdf(
+    radii, relation_matrix, path_or_buf, save_mode, rdf_part_sum, rdf_full_sum=None
+):
     """
     Saves the computed full and partial rdf (atom-atom or atom-molecule) into a
     pd.DataFrame (and csv file if save_mode is True).
     """
     if rdf_full_sum is not None:
         result_tuple = (radii, rdf_full_sum, rdf_part_sum)
-        final_label = ['r ($\AA$)', 'g_full(r)']
+        final_label = ["r ($\AA$)", "g_full(r)"]
     else:
         result_tuple = (radii, rdf_part_sum)
-        final_label = ['r ($\AA$)']
+        final_label = ["r ($\AA$)"]
     final_array = np.vstack(result_tuple).transpose()
-    final_labels = final_label + \
-                   [f'g_{str(pair[0])}-{str(pair[1])}' for pair in
-                    relation_matrix]
+    final_labels = final_label + [
+        f"g_{str(pair[0])}-{str(pair[1])}" for pair in relation_matrix
+    ]
     final_df = pd.DataFrame(final_array, columns=final_labels)
     if save_mode:
         final_df.to_csv(path_or_buf, index=False)
@@ -330,8 +364,7 @@ def _save_cn(relation_matrix, path_or_buff, cn_sum, save_mode):
     pd.DataFrame (and csv file if save_mode is True).
     """
     final_array = np.vstack(cn_sum).transpose()
-    final_labels = [f'cn_{str(pair[0])}-{str(pair[1])}' for pair in
-                    relation_matrix]
+    final_labels = [f"cn_{str(pair[0])}-{str(pair[1])}" for pair in relation_matrix]
     final_df = pd.DataFrame(final_array, columns=final_labels)
     if save_mode:
         final_df.to_csv(path_or_buff, index=False)
@@ -342,9 +375,18 @@ def _save_cn(relation_matrix, path_or_buff, cn_sum, save_mode):
     return final_df
 
 
-def calc_atomic_rdf(r_cut, bin_size, num_types, mass, partial_relations,
-                    filename, num_mols=None, num_atoms_per_mol=None,
-                    path_or_buff='rdf.csv', save_mode=True):
+def calc_atomic_rdf(
+    r_cut,
+    bin_size,
+    num_types,
+    mass,
+    partial_relations,
+    filename,
+    num_mols=None,
+    num_atoms_per_mol=None,
+    path_or_buff="rdf.csv",
+    save_mode=True,
+):
     """
     Calculates full and partial rdf between two atoms based on LAMMPS dump
     files. Assumes 3d coordinates are dumped. Uses either default atom ids or
@@ -401,10 +443,9 @@ def calc_atomic_rdf(r_cut, bin_size, num_types, mass, partial_relations,
                                         num_atoms_per_mol=[16, 15, 1],\
                                         path_or_buff='Tests/rdf_altered_ids.csv')
     """
-    dumps, num_bins, radii, num_files, num_relations = _initialize(r_cut,
-                                                                   bin_size,
-                                                                   filename,
-                                                                   partial_relations)
+    dumps, num_bins, radii, num_files, num_relations = _initialize(
+        r_cut, bin_size, filename, partial_relations
+    )
     rdf_full_sum = np.zeros(num_bins)
     rdf_part_sum = np.zeros((num_relations, num_bins))
 
@@ -413,50 +454,87 @@ def calc_atomic_rdf(r_cut, bin_size, num_types, mass, partial_relations,
         # TODO: checking step
         if num_mols and num_atoms_per_mol:
             data = _calc_atom_type(ref_df.values, num_mols, num_atoms_per_mol)
-            ref_df = pd.DataFrame(data, columns=['id', 'type', 'x', 'y', 'z']). \
-                drop('type', axis=1)
-            atom_types_col = 'id'
+            ref_df = pd.DataFrame(data, columns=["id", "type", "x", "y", "z"]).drop(
+                "type", axis=1
+            )
+            atom_types_col = "id"
         else:
-            ref_df = ref_df.drop('id', axis=1)
-            atom_types_col = 'type'
+            ref_df = ref_df.drop("id", axis=1)
+            atom_types_col = "type"
 
-        rho, rho_pairs, box_lengths, atom_types, object_types = \
-            _calc_props(dump, ref_df, ref_df, num_types, mass, num_relations,
-                        partial_relations, atom_types_col,
-                        num_atoms_per_mol=num_atoms_per_mol)
+        rho, rho_pairs, box_lengths, atom_types, object_types = _calc_props(
+            dump,
+            ref_df,
+            ref_df,
+            num_types,
+            mass,
+            num_relations,
+            partial_relations,
+            atom_types_col,
+            num_atoms_per_mol=num_atoms_per_mol,
+        )
 
         relation_matrix = np.asarray(partial_relations).transpose()
         rdf_full = np.zeros(num_bins)
         rdf_part = np.zeros((num_relations, num_bins))
         st = time()
         ref_data = ref_df.values
-        rdf_full, rdf_part = _rdf_loop(ref_data, relation_matrix, num_relations,
-                                       box_lengths, r_cut, bin_size, rdf_full,
-                                       rdf_part)
+        rdf_full, rdf_part = _rdf_loop(
+            ref_data,
+            relation_matrix,
+            num_relations,
+            box_lengths,
+            r_cut,
+            bin_size,
+            rdf_full,
+            rdf_part,
+        )
         print("time:", time() - st)
         print("Finished computing RDF for timestep", dump.timestep)
 
-        rdf_full, rdf_part = _normalize_rdf(bin_size, rho_pairs, atom_types,
-                                            partial_relations, num_relations,
-                                            num_bins, rdf_part, rdf_full,
-                                            ref_df, rho)
+        rdf_full, rdf_part = _normalize_rdf(
+            bin_size,
+            rho_pairs,
+            atom_types,
+            partial_relations,
+            num_relations,
+            num_bins,
+            rdf_part,
+            rdf_full,
+            ref_df,
+            rho,
+        )
         rdf_full_sum += rdf_full
         rdf_part_sum += rdf_part
 
         end_traj_loop = timer()
-        print('Trajectory loop took:', end_traj_loop - start_traj_loop, 's')
+        print("Trajectory loop took:", end_traj_loop - start_traj_loop, "s")
 
     rdf_full_sum = rdf_full_sum / num_files
     rdf_part_sum = rdf_part_sum / num_files
-    final_df = _save_rdf(radii, relation_matrix, path_or_buff, save_mode,
-                         rdf_part_sum, rdf_full_sum=rdf_full_sum)
+    final_df = _save_rdf(
+        radii,
+        relation_matrix,
+        path_or_buff,
+        save_mode,
+        rdf_part_sum,
+        rdf_full_sum=rdf_full_sum,
+    )
     return final_df
 
 
-def calc_atomic_cn(r_cut, bin_size, num_types, mass, partial_relations,
-                   filename,
-                   num_mols=None, num_atoms_per_mol=None, path_or_buff='cn.csv',
-                   save_mode=True):
+def calc_atomic_cn(
+    r_cut,
+    bin_size,
+    num_types,
+    mass,
+    partial_relations,
+    filename,
+    num_mols=None,
+    num_atoms_per_mol=None,
+    path_or_buff="cn.csv",
+    save_mode=True,
+):
     """
     Calculates coordination number between two atoms based on LAMMPS dump files.
     Assumes 3d coordinates are dumped. Uses either default atom ids or
@@ -514,10 +592,9 @@ def calc_atomic_cn(r_cut, bin_size, num_types, mass, partial_relations,
                                         num_atoms_per_mol=[16, 15, 1],\
                                         path_or_buff='Tests/cn_altered_ids.csv')
     """
-    dumps, num_bins, radii, num_files, num_relations = _initialize(r_cut,
-                                                                   bin_size,
-                                                                   filename,
-                                                                   partial_relations)
+    dumps, num_bins, radii, num_files, num_relations = _initialize(
+        r_cut, bin_size, filename, partial_relations
+    )
     cn_sum = np.zeros(num_relations)
 
     for dump in dumps:
@@ -525,24 +602,33 @@ def calc_atomic_cn(r_cut, bin_size, num_types, mass, partial_relations,
         # TODO: checking step
         if num_mols and num_atoms_per_mol:
             data = _calc_atom_type(ref_df.values, num_mols, num_atoms_per_mol)
-            ref_df = pd.DataFrame(data, columns=['id', 'type', 'x', 'y', 'z']). \
-                drop('type', axis=1)
-            atom_types_col = 'id'
+            ref_df = pd.DataFrame(data, columns=["id", "type", "x", "y", "z"]).drop(
+                "type", axis=1
+            )
+            atom_types_col = "id"
         else:
-            ref_df = ref_df.drop('id', axis=1)
-            atom_types_col = 'type'
+            ref_df = ref_df.drop("id", axis=1)
+            atom_types_col = "type"
 
-        rho, rho_pairs, box_lengths, atom_types, object_types = \
-            _calc_props(dump, ref_df, ref_df, num_types, mass, num_relations,
-                        partial_relations, atom_types_col,
-                        num_atoms_per_mol=num_atoms_per_mol)
+        rho, rho_pairs, box_lengths, atom_types, object_types = _calc_props(
+            dump,
+            ref_df,
+            ref_df,
+            num_types,
+            mass,
+            num_relations,
+            partial_relations,
+            atom_types_col,
+            num_atoms_per_mol=num_atoms_per_mol,
+        )
 
         relation_matrix = np.asarray(partial_relations).transpose()
         cn = np.zeros(num_relations)
         st = time()
         ref_data = ref_df.values
-        cn = _cn_loop(ref_data, relation_matrix, num_relations, box_lengths,
-                      r_cut, bin_size, cn)
+        cn = _cn_loop(
+            ref_data, relation_matrix, num_relations, box_lengths, r_cut, bin_size, cn
+        )
 
         print("time:", time() - st)
         print("Finished computing CN for timestep", dump.timestep)
@@ -551,16 +637,25 @@ def calc_atomic_cn(r_cut, bin_size, num_types, mass, partial_relations,
         cn_sum += cn
 
         end_traj_loop = timer()
-        print('Trajectory loop took:', end_traj_loop - start_traj_loop, 's')
+        print("Trajectory loop took:", end_traj_loop - start_traj_loop, "s")
 
     cn_sum = cn_sum / num_files
     final_df = _save_cn(relation_matrix, path_or_buff, cn_sum, save_mode)
     return final_df
 
 
-def calc_molecular_rdf(r_cut, bin_size, num_types, mass, partial_relations,
-                       filename, num_mols, num_atoms_per_mol,
-                       path_or_buff='rdf_mol.csv', save_mode=True):
+def calc_molecular_rdf(
+    r_cut,
+    bin_size,
+    num_types,
+    mass,
+    partial_relations,
+    filename,
+    num_mols,
+    num_atoms_per_mol,
+    path_or_buff="rdf_mol.csv",
+    save_mode=True,
+):
     """
     Calculates partial rdf between an atom and the center of mass of a molecule
     based on LAMMPS dump files. Assumes 3d coordinates are dumped. Works for
@@ -605,47 +700,67 @@ def calc_molecular_rdf(r_cut, bin_size, num_types, mass, partial_relations,
                                         num_atoms_per_mol=[16, 15, 1],\
                                         path_or_buff='Tests/rdf_mol.csv')
     """
-    dumps, num_bins, radii, num_files, num_relations = _initialize(r_cut,
-                                                                   bin_size,
-                                                                   filename,
-                                                                   partial_relations)
+    dumps, num_bins, radii, num_files, num_relations = _initialize(
+        r_cut, bin_size, filename, partial_relations
+    )
     rdf_part_sum = np.zeros((num_relations, num_bins))
     for dump in dumps:
         start_traj_loop, ref_df, df = _define_dataframes(dump)
         # TODO: checking step
         df = _define_mol_cols(df, num_mols, num_atoms_per_mol, mass)
-        ref_df = ref_df.drop('id', axis=1)
-        rho, rho_pairs, box_lengths, atom_types, object_types = \
-            _calc_props(dump, ref_df, df, num_types, mass, num_relations,
-                        partial_relations, 'type')
+        ref_df = ref_df.drop("id", axis=1)
+        rho, rho_pairs, box_lengths, atom_types, object_types = _calc_props(
+            dump, ref_df, df, num_types, mass, num_relations, partial_relations, "type"
+        )
         relation_matrix = np.asarray(partial_relations).transpose()
         rdf_part = np.zeros((num_relations, num_bins))
         st = time()
         atom_data = ref_df.values
         mol_data = df.values
-        rdf_part = _rdf_mol_loop(atom_data, mol_data, relation_matrix,
-                                 num_relations, box_lengths, r_cut, bin_size,
-                                 rdf_part)
+        rdf_part = _rdf_mol_loop(
+            atom_data,
+            mol_data,
+            relation_matrix,
+            num_relations,
+            box_lengths,
+            r_cut,
+            bin_size,
+            rdf_part,
+        )
         print("time:", time() - st)
         print("Finished computing RDF for timestep", dump.timestep)
 
-        _, rdf_part = _normalize_rdf(bin_size, rho_pairs, atom_types,
-                                     partial_relations, num_relations, num_bins,
-                                     rdf_part)
+        _, rdf_part = _normalize_rdf(
+            bin_size,
+            rho_pairs,
+            atom_types,
+            partial_relations,
+            num_relations,
+            num_bins,
+            rdf_part,
+        )
         rdf_part_sum += rdf_part
 
         end_traj_loop = timer()
-        print('Trajectory loop took:', end_traj_loop - start_traj_loop, 's')
+        print("Trajectory loop took:", end_traj_loop - start_traj_loop, "s")
 
     rdf_part_sum = rdf_part_sum / num_files
-    final_df = _save_rdf(radii, relation_matrix, path_or_buff, save_mode,
-                         rdf_part_sum)
+    final_df = _save_rdf(radii, relation_matrix, path_or_buff, save_mode, rdf_part_sum)
     return final_df
 
 
-def calc_molecular_cn(r_cut, bin_size, num_types, mass, partial_relations,
-                      filename, num_mols, num_atoms_per_mol,
-                      path_or_buff='cn_mol.csv', save_mode=True):
+def calc_molecular_cn(
+    r_cut,
+    bin_size,
+    num_types,
+    mass,
+    partial_relations,
+    filename,
+    num_mols,
+    num_atoms_per_mol,
+    path_or_buff="cn_mol.csv",
+    save_mode=True,
+):
     """
     Calculates coordination number between an atom and the center of mass of a
     molecule based on LAMMPS dump files. Assumes 3d coordinates are dumped.
@@ -691,27 +806,34 @@ def calc_molecular_cn(r_cut, bin_size, num_types, mass, partial_relations,
                                             num_atoms_per_mol=[16, 15, 1],\
                                             path_or_buff='Tests/cn_mol.csv')
     """
-    dumps, num_bins, radii, num_files, num_relations = _initialize(r_cut,
-                                                                   bin_size,
-                                                                   filename,
-                                                                   partial_relations)
+    dumps, num_bins, radii, num_files, num_relations = _initialize(
+        r_cut, bin_size, filename, partial_relations
+    )
     cn_sum = np.zeros(num_relations)
 
     for dump in dumps:
         start_traj_loop, ref_df, df = _define_dataframes(dump)
         # TODO: checking step
         df = _define_mol_cols(df, num_mols, num_atoms_per_mol, mass)
-        ref_df = ref_df.drop('id', axis=1)
-        rho, rho_pairs, box_lengths, atom_types, object_types = \
-            _calc_props(dump, ref_df, df, num_types, mass, num_relations,
-                        partial_relations, 'type')
+        ref_df = ref_df.drop("id", axis=1)
+        rho, rho_pairs, box_lengths, atom_types, object_types = _calc_props(
+            dump, ref_df, df, num_types, mass, num_relations, partial_relations, "type"
+        )
         relation_matrix = np.asarray(partial_relations).transpose()
         cn = np.zeros(num_relations)
         st = time()
         atom_data = ref_df.values
         mol_data = df.values
-        cn = _cn_mol_loop(atom_data, mol_data, relation_matrix, num_relations,
-                          box_lengths, r_cut, bin_size, cn)
+        cn = _cn_mol_loop(
+            atom_data,
+            mol_data,
+            relation_matrix,
+            num_relations,
+            box_lengths,
+            r_cut,
+            bin_size,
+            cn,
+        )
         print("time:", time() - st)
         print("Finished computing CN for timestep", dump.timestep)
 
@@ -719,12 +841,12 @@ def calc_molecular_cn(r_cut, bin_size, num_types, mass, partial_relations,
         cn_sum += cn
 
         end_traj_loop = timer()
-        print('Trajectory loop took:', end_traj_loop - start_traj_loop, 's')
+        print("Trajectory loop took:", end_traj_loop - start_traj_loop, "s")
 
     cn_sum = cn_sum / num_files
     final_df = _save_cn(relation_matrix, path_or_buff, cn_sum, save_mode)
     return final_df
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print()

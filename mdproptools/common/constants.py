@@ -4,8 +4,8 @@ __email__ = "matthew.bliss@stonybrook.edu"
 __date__ = "Jun 11, 2020"
 
 """
-This module contains scientific constants and conversion factors into SI units for LAMMPS unit types.
-The constants are from:
+This module contains scientific constants and conversion factors into SI units for 
+LAMMPS unit types. The constants are from:
 BIPM. Le Système international d’unités / The International System of Units (‘The SI Brochure’).
     Bureau international des poids et mesures, ninth edition, 2019. URL
     http://www.bipm.org/en/si/si_brochure/, ISBN 978-92-822-2272-0.
