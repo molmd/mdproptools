@@ -17,11 +17,13 @@ from pymatgen.io.lammps import outputs
 
 from mdproptools.common import constants
 
-__author__ = "Matthew Bliss"
-__maintainer__ = "Matthew Bliss"
-__email__ = "matthew.bliss@stonybrook.edu"
+from mdproptools.utilities.plots import set_axis
+
+__author__ = "Matthew Bliss, Rasha Atwi"
+__maintainer__ = "Rasha Atwi"
+__email__ = "rasha.atwi@stonybrook.edu"
 __status__ = "Development"
-__date__ = "Jun 2020"
+__date__ = "Sep 2021"
 __version__ = "0.0.1"
 
 
