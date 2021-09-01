@@ -104,4 +104,204 @@ def calc_3d_visc(
         return viscosity_average
 
 
-# TODO: Implement and test other methods for calculating viscosity (eg. Einstein relation, non-equilibrium methods)
+def calc_avg_visc(
+    log_pattern,
+    cutoff_time,
+    volume,
+    temp,
+    timestep,
+    acf_method="wkt",
+    units="real",
+    working_dir=None,
+):
+    if not working_dir:
+        working_dir = os.getcwd()
+    list_log_df = []
+    log_files = glob.glob(f"{working_dir}/{log_pattern}")
+    for file in log_files:
+        log_df = outputs.parse_lammps_log(file)
+        list_log_df.append(log_df[0])
+
+    # find the index corresponding to the cutoff_time
+    cutoff_time_idx = list_log_df[0].index.get_loc(
+        list_log_df[0][list_log_df[0]["Step"] == cutoff_time].index[0]
+    )
+
+    # calculate viscosity for each replicate
+    visc_avg = []
+    visc_data = []
+    acf_data = []
+    for ind, log_df in enumerate(list_log_df):
+        print(f"Processing replicate number {ind+1}")
+        log_df = log_df.iloc[cutoff_time_idx:]
+        viscosity_average, viscosity_data, acf = calc_3d_visc(
+            log_df, volume, temp, timestep, acf_method, units, output_all_data=True
+        )
+        visc_avg.append(viscosity_average)
+        visc_data.append(viscosity_data)
+        acf_data.append(acf)
+    time = np.array(list_log_df[0]["Step"][: len(visc_avg[0]) - 1]) * timestep
+    return visc_avg, visc_data, acf_data, time
+
+
+def exp_func(t, A, alpha, tau1, tau2):
+    return A * alpha * tau1 * (1 - np.exp(-t / tau1)) + A * (1 - alpha) * tau2 * (
+        1 - np.exp(-t / tau2)
+    )
+
+
+def fit_avg_visc(
+    visc_avg,
+    time,
+    timestep,
+    units="real",
+    initial_guess=[1e-10, 0.8, 1.1e4, 1.1e4],
+    plot=False,
+    plot_file="viscosity.png",
+    working_dir=None,
+):
+    if not working_dir:
+        working_dir = os.getcwd()
+    visc = np.average(visc_avg, axis=0)
+    std = np.std(visc_avg, axis=0)
+
+    time_indexes = np.where(time > 2000)
+    if time_indexes:
+        idx_start_time = time_indexes[0][0]
+    else:
+        idx_start_time = 1
+
+    std_indexes = np.where(std >= 0.4 * visc)
+    if std_indexes:
+        idx_cut_time = std_indexes[0][0]
+    else:
+        idx_cut_time = 1
+
+    popt2, pcov2 = optimize.curve_fit(
+        exp_func,
+        time[idx_start_time:idx_cut_time],
+        visc[idx_start_time:idx_cut_time],
+        sigma=1 / std[idx_start_time:idx_cut_time] ** 0.5,
+        bounds=(
+            0,
+            [
+                max(visc[idx_start_time:idx_cut_time]),
+                1,
+                5 * time[idx_cut_time],
+                5 * time[idx_cut_time],
+            ],
+        ),
+        p0=initial_guess,
+        maxfev=1000000,
+    )
+
+    viscosity = popt2[0] * popt2[1] * popt2[2] + popt2[0] * (1 - popt2[1]) * popt2[3]
+    fit = []
+    for t in time[idx_start_time:idx_cut_time]:
+        fit.append(exp_func(t, *popt2))
+
+    if plot:
+        step_to_s = timestep * cnst.TIME_CONVERSION[units]
+        time_data = time * step_to_s * 10 ** 9
+
+        paired = plt.get_cmap("Paired")
+        colors = iter(paired(np.linspace(0, 1, 10)))
+
+        fig, ax = plt.subplots(1, 3, figsize=[20, 5], sharey=False)
+        ax1 = ax[0]
+        set_axis(ax1, axis="both")
+        for visc_arr in visc_avg:
+            ax1.plot(
+                time_data, visc_arr[0:-1], linewidth=2, color=next(colors),
+            )
+        ax1.plot(time_data, visc[0:-1], linewidth=2, color="black")
+        ax1.axvline(time_data[idx_cut_time], linewidth=2, color="black", linestyle="--")
+        ax1.set_xlabel(r"$\mathrm{Time, 10^9 (m^2/s)}$", fontsize=18)
+        ax1.set_ylabel(r"$\mathrm{\mu \ (Pa.s)}$", fontsize=18)
+
+        ax2 = ax[1]
+        set_axis(ax2, axis="both")
+        ax2.plot(time_data, std[0:-1], linewidth=2, color="black")
+        ax2.set_xlabel(r"$\mathrm{Time, 10^9 (s)}$", fontsize=18)
+        ax2.set_ylabel(r"$\mathrm{\sigma \ (Pa.s)}$", fontsize=18)
+
+        ax3 = ax[2]
+        set_axis(ax3, axis="both")
+        ax3.plot(
+            time_data[idx_start_time:idx_cut_time],
+            visc[idx_start_time:idx_cut_time],
+            linewidth=2,
+            color="red",
+            label="data",
+        )
+        ax3.plot(
+            time_data[idx_start_time:idx_cut_time],
+            fit,
+            linewidth=2,
+            color="black",
+            label="fit",
+        )
+        # TODO: add fit parameters
+        # ax3.annotate(
+        #     r"$\mathrm{\mu = }$" + str(round(viscosity, 4)) + "Pa.s",
+        #     xy=(0.5, 0),
+        #     fontsize=16,
+        #     textcoords='offset points',
+        #     xycoords=('axes fraction', 'figure fraction'),
+        #     xytext=(0, 10),
+        #     ha="center",
+        #     va="bottom",
+        # )
+        ax3.legend(fontsize=16, loc="lower right", frameon=False)
+        ax3.set_xlabel(r"$\mathrm{Time, 10^9 (m^2/s)}$", fontsize=18)
+        ax3.set_ylabel(r"$\mathrm{\mu \ (Pa.s)}$", fontsize=18)
+
+        for axis in [ax1, ax2, ax3]:
+            axis.xaxis.set_major_formatter(ScalarFormatter())
+            y_formatter = ScalarFormatter(useOffset=False)
+            axis.yaxis.set_major_formatter(y_formatter)
+            axis.yaxis.offsetText.set_fontsize(18)
+            axis.locator_params(axis="y", nbins=6)
+
+        fig.tight_layout(pad=3)
+        fig.savefig(f"{working_dir}/{plot_file}", bbox_inches="tight", pad_inches=0.1)
+
+    return viscosity
+
+
+def bootstrapping(
+    visc_avg,
+    time,
+    timestep,
+    num_replicates,
+    tot_replicates,
+    units="real",
+    initial_guess=[1e-10, 0.8, 1.1e4, 1.1e4],
+    plot=True,
+    working_dir=None,
+):
+    if not working_dir:
+        working_dir = os.getcwd()
+    idx = np.zeros((tot_replicates, num_replicates), dtype=int)
+    for i in range(tot_replicates):
+        idx[i] = random.sample(range(len(visc_avg)), num_replicates)
+    print(idx)
+    visc_samples = np.array(visc_avg)[idx]
+
+    all_visc = []
+    for ind, visc in enumerate(visc_samples):
+        print(f"Fitting viscosity sample {ind+1} out of {len(visc_samples)}")
+        viscosity = fit_avg_visc(
+            visc_avg=visc,
+            time=time,
+            timestep=timestep,
+            units=units,
+            initial_guess=initial_guess,
+            plot=plot,
+            plot_file=f"viscosity_{ind+1}.png",
+            working_dir=working_dir,
+        )
+        all_visc.append(viscosity)
+    final_viscosity = np.average(all_visc)
+    final_std = np.std(all_visc)
+    return final_viscosity, final_std
