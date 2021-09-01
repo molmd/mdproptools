@@ -33,6 +33,17 @@ TENSOR_LABELS = ["Pxy", "Pxz", "Pyz"]
 
 
 class Viscosity:
+    """
+    Class to calculate the viscosity of a solution from MD simulations. Uses
+    Green-Kubo correlation and follows the methods in: 10.1021/acs.jcim.9b00066 and
+    10.1021/acs.jctc.5b00351. Supports calculating the viscosity from one trajectory
+    or multiple replicates to get a statistical average and standard deviation.
+    If multiple replicates are available, bootstrapping can be done to obtain a
+    distribution of viscosity values. Fits the running integral viscosity to a
+    double exponential function which it analytically integrates to extrapolate to
+    infinite time.
+    """
+    
     def __init__(
         self,
         log_pattern,
@@ -45,14 +56,7 @@ class Viscosity:
         working_dir=None,
     ):
         """
-        Class to calculate the viscosity of a solution from MD simulations. Uses
-        Green-Kubo correlation and follows the methods in: 10.1021/acs.jcim.9b00066 and
-        10.1021/acs.jctc.5b00351. Supports calculating the viscosity from one trajectory
-        or multiple replicates to get a statistical average and standard deviation.
-        If multiple replicates are available, bootstrapping can be done to obtain a
-        distribution of viscosity values. Fits the running integral viscosity to a
-        double exponential function which it analytically integrates to extrapolate to
-        infinite time.
+        Creates a Viscosity object. 
 
         Args:
             log_pattern (str): pattern of the name of the LAMMPS log files
