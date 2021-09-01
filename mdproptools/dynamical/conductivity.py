@@ -15,6 +15,7 @@ from matplotlib.ticker import ScalarFormatter
 
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
 
+from mdproptools.common.com_mols import calc_com
 from mdproptools.dynamical.residence_time import _set_axis
 
 __author__ = "Rasha Atwi"
@@ -53,53 +54,17 @@ class Conductivity:
         self.cl = int(len(self.dumps) / 2)
         self.time = []  # time data used to calculate GK integral
 
-    def define_mol_cols(self, dump):
-        # TODO: this is exactly the same as the one in diffusivity except for
-        #  vx instead of xu; need to merge and put in a common module
-        # TODO: speedup this - it is the most exp part of cond calc
-        mol_types = []
-        mol_ids = []
-
-        for mol_type, number_of_mols in enumerate(self.num_mols):
-            for mol_id in range(number_of_mols):
-                for atom_id in range(self.num_atoms_per_mol[mol_type]):
-                    mol_types.append(mol_type + 1)
-                    mol_ids.append(mol_id + 1)
-        if not self.mass:
-            assert "mass" in dump.data.columns, "Missing atom masses in dump file."
-            df = pd.DataFrame(
-                dump.data[["id", "type", "vx", "vy", "vz", "mass", "q"]],
-                columns=["id", "type", "vx", "vy", "vz", "mass", "q"],
-            )
-        else:
-            df = pd.DataFrame(
-                dump.data[["id", "type", "vx", "vy", "vz", "q"]],
-                columns=["id", "type", "vx", "vy", "vz", "q"],
-            )
-            df["mass"] = df.apply(lambda x: self.mass[int(x.type - 1)], axis=1)
-        df["mol_type"] = mol_types
-        df["mol_id"] = mol_ids
-        df = df.drop(["type", "id"], axis=1).set_index(["mol_type", "mol_id"])
-        mol_df = df.groupby(["mol_type", "mol_id"]).apply(
-            lambda x: pd.Series(
-                x["mass"].values @ x[["vx", "vy", "vz"]].values / x.mass.sum(),
-                index=["vx", "vy", "vz"],
-            )
-        )
-        mol_df["mass"] = df.groupby(["mol_type", "mol_id"])["mass"].sum()
-        mol_df["q"] = df.groupby(["mol_type", "mol_id"])["q"].sum()
-        return mol_df.reset_index().rename(columns={"mol_type": "type"})
-
     def get_charge_flux(self):
         for ind, dump in enumerate(self.dumps):
-            print("Processing frame number: {}".format(ind))
+            print(f"Processing frame number: {ind} out of {len(self.dumps)}")
             # if ind < self.cl:
             #     self.time.append(dump.timestep * self.dt)
             self.time.append(dump.timestep)
             dump.data = dump.data.sort_values(by=["id"])
             dump.data.reset_index(inplace=True)
             # get dataframe with mol type, mol id, vx, vy, vz, mass, q
-            df = self.define_mol_cols(dump)
+            df = calc_com(dump, self.num_mols, self.num_atoms_per_mol, self.mass,
+                          atom_attributes=["vx", "vy", "vz"], calc_charge=True)
 
             def dot(x):
                 return np.dot(x, df.loc[x.index, "q"])
@@ -124,17 +89,16 @@ class Conductivity:
     #     self.tot_flux[-1, :] = self.tot_flux[0:-1, :].sum(axis=0)
 
     def correlate_charge_flux(self):
-        # TODO: np.correlate, put in common module (similar method in r.t)
         # calculate contribution from each molecule type
         for i in range(len(self.num_mols)):
             for j in range(len(self.num_mols)):
                 for k in range(self.j.shape[0]):
-                    corr = self._correlate(self.j[k, i, :], self.j[k, j, :])
+                    corr = self.correlate(self.j[k, i, :], self.j[k, j, :])
                     self.tot_flux[i, :] += corr
                     self.tot_flux[-1, :] += corr
 
     @staticmethod
-    def _correlate(a, b):
+    def correlate(a, b):
         al = np.concatenate((a, np.zeros(len(a))), axis=0)
         bl = np.concatenate((b, np.zeros(len(b))), axis=0)
         c = np.fft.ifft(np.fft.fft(al) * np.conjugate(np.fft.fft(bl))).real
@@ -148,7 +112,6 @@ class Conductivity:
             self.integral[i][1:] = cumtrapz(self.tot_flux[i], dx=delta)
 
     def fit_curve(self, time_range=None):
-        # TODO: provide time range for each type (tot and mols)
         for i in range(len(self.integral)):
             if not time_range:
                 self.ave[i] = np.average(self.integral[i])
