@@ -37,10 +37,10 @@ class Viscosity:
     Class to calculate the viscosity of a solution from MD simulations. Uses
     Green-Kubo correlation and follows the methods in: 10.1021/acs.jcim.9b00066 and
     10.1021/acs.jctc.5b00351. Supports calculating the viscosity from one trajectory
-    or multiple replicates to get a statistical average and standard deviation.
-    If multiple replicates are available, bootstrapping can be done to obtain a
-    distribution of viscosity values. Fits the running integral viscosity to a
-    double exponential function which it analytically integrates to extrapolate to
+    or multiple replicates to get a statistical average and std. If multiple replicates
+    are available, bootstrapping can be done to obtain a distribution of viscosity
+    values. Fits the running integral viscosity to a double exponential function which
+    it analytically integrates to extrapolate to
     infinite time.
     """
     
@@ -59,19 +59,20 @@ class Viscosity:
         Creates a Viscosity object. 
 
         Args:
-            log_pattern (str): pattern of the name of the LAMMPS log files
-            cutoff_time (int): simulation time to ignore in the autocorrelation
-            volume (float): volume of the simulation box in the same units specified as input
-            temp (flaot): temperature (K)
-            timestep (int or float): timestep used in the simulations in the same units
-                specified as input
-            acf_method (str): method used to calculate the autocorrelation function.
+            log_pattern (str): Pattern of the name of the LAMMPS log files
+            cutoff_time (int): Simulation time to ignore in the autocorrelation
+            volume (float): Volume of the simulation box in the same units specified as input
+            temp (flaot): Temperature (K); defaults to 298.15 K
+            timestep (int or float): Timestep used in the simulations in the same units
+                specified as input; defaults to 1 fs when real units are used
+            acf_method (str): Method used to calculate the autocorrelation function.
                 Options are:
-                    brute_force: not recommended for large series
-                    wkt: Wiener-Khinchin theorem as implemented in pylat/src/viscio.py
+                brute_force: Not recommended for large series
+                wkt: Wiener-Khinchin theorem as implemented in pylat/src/viscio.py
                 Defaults to wkt
-            units (str): units used in the LAMMMPS simulations; used to convert to SI units
-            working_dir (str): full path of the LAMMPS log files
+            units (str): Units used in the LAMMMPS simulations; used to convert to SI
+                units; defaults to real unit
+            working_dir (str): Path of the LAMMPS log files
         """
         self.log_pattern = log_pattern
         self.cutoff_time = cutoff_time
@@ -87,15 +88,20 @@ class Viscosity:
     @staticmethod
     def autocorrelate(series, method):
         """
-        Returns the time autocorrelation function as defined for using Green-Kubo relations
-        :param series: [array-like] The data series to be autocorrelated
-        :param method: [str] Method used to calculate autocorrelation function. Options are:
-            brute_force: not recommended for large series
-            wkt: Wiener-Khinchin theorem as implemented in pylat/src/viscio.py
-            Defaults to wht
-        :return: [array-like] The autocorrelated series whose indices match those of the input series
-        """
+        Returns the time autocorrelation function as defined for using Green-Kubo relations.
 
+        Args:
+            series (array-like): Data series to be correlated
+            method (str): Method used to calculate the autocorrelation function.
+                Options are:
+                brute_force: Not recommended for large series
+                wkt: Wiener-Khinchin theorem as implemented in pylat/src/viscio.py
+                Defaults to wkt
+
+        Returns:
+            Array of the autocorrelated series whoses indices match thoses of the
+            input series
+        """
         if method == "brute_force":
             normal = np.arange(len(series), 0, -1, dtype="float")
             long_result = np.correlate(series, series, "full")
@@ -117,16 +123,48 @@ class Viscosity:
 
     @staticmethod
     def exp_func(t, A, alpha, tau1, tau2):
+        """
+        Defines a double exponential function used in fitting the viscosity data.
+        Based on 10.1021/jp062885s.
+
+        Args:
+            t (int or float): Time
+            A, alpa, tau1, tau2 (float): Fitting parameters
+
+        Returns:
+            Value of the double exponential function
+        """
         return A * alpha * tau1 * (1 - np.exp(-t / tau1)) + A * (1 - alpha) * tau2 * (
             1 - np.exp(-t / tau2)
         )
 
     def calc_visc(self, acf, dt):
+        """
+        Calculates the viscosity by integrating the 1-D pressure tensor autocorrelation
+        function over time.
+
+        Args:
+            acf (array-like): Pressure tensor autocorrelation data
+            dt (array-like): Time data
+
+        Returns:
+            Array of 1-D viscosity data
+        """
         integral = integrate.cumtrapz(acf, dx=dt)
         visc = np.multiply(self.volume / (constants.BOLTZMANN * self.temp), integral)
         return visc
 
     def _calc_3d_visc(self, log_df):
+        """
+        Calculates the viscosity using all the elements of the pressure tensor.
+
+        Args:
+            log_df (pd.Datafarme): Thermo dataframe from the LAMMPS log file
+
+        Returns:
+            Arrays of the average viscosity, viscosity from each element of the
+            pressure tensore, and autocorrelation data as a function of time
+        """
         if self.units not in constants.SUPPORTED_UNITS:
             raise KeyError(
                 "Unit type not supported. Supported units are: "
@@ -155,6 +193,20 @@ class Viscosity:
         return viscosity_average, viscosity_data, acf_data
 
     def calc_avg_visc(self, output_all_data=False):
+        """
+        Parses LAMMPS log files for the pressure tensors and calculates the
+        viscosity from each replicate while ignoring the first few steps corresponding
+        to the cutoff_time.
+
+        Args:
+            output_all_data (bool): Whether to output the average viscosity, viscosity
+                from each pressure tensor, autocorrelation function, and time data or
+                just output the average viscosity; defaults to False
+
+        Returns:
+            Arrays of average viscosity per replicate and/or viscosity from each
+            pressure tensor, autocorrelation data, and time
+        """
         list_log_df = []
         log_files = glob.glob(f"{self.working_dir}/{self.log_pattern}")
         for file in log_files:
@@ -193,6 +245,33 @@ class Viscosity:
         plot=False,
         plot_file="viscosity.png",
     ):
+        """
+        Computes the average and std of the running time integrals corresponding to
+        different replicates; fits the average viscosity to a double exponential function
+        using least-squares regression with a weighting function 1/std**0.5; then
+        computes the final value for the viscosity from the infinite-time value of the
+        double exponential function; ignores the first 2 ps in the fitting due to large
+        fluctuations and uses a long-time cutoff corresponding to a std <= 0.4*running
+        average viscosity. Works for one or multiple replicates.
+
+        Args:
+            visc_avg (array-like): Average viscosity data as a function of time for
+                different replicates
+            initial_guess (list): Initial guess for the double exponential function
+                parameters
+            plot (bool): Whether to plot the viscosity data; if True, saves a figure
+                with the 3 subplots:
+                (1) Viscosity data versus time from different replicates along with the
+                average running integral and a vertical line corresponding to the
+                cutoff time used
+                (2) Std versus time
+                (3) Viscosity data and viscosity fit versus time
+                Defaults to False
+            plot_file (str): Name of the plot file
+
+        Returns:
+            Infinite-time value of the viscosity
+        """
         visc = np.average(visc_avg, axis=0)
         std = np.std(visc_avg, axis=0)
 
@@ -312,6 +391,32 @@ class Viscosity:
         initial_guess=[1e-10, 0.8, 1.1e4, 1.1e4],
         plot=True,
     ):
+        """
+        Performs bootstrapping by using random sampling of the running integrals from
+        different replicates to obtain a distribution of viscosity values from which it
+        calculates an estimate of the uncertainty; does not use the same replicate
+        multiple times within one iteration
+
+        Args:
+            visc_avg (array-like): Average viscosity data as a function of time for
+                different replicates
+            num_replicates (int): Number of replicates to randomly choose for each
+                iteration of the bootstrapping method
+            tot_replicates (int): Number of bootstrapping iterations to run
+            initial_guess (list): Initial guess for the double exponential function
+                parameters
+            plot (bool): Whether to plot the viscosity data; if True, saves a figure
+                with the 3 subplots:
+                (1) Viscosity data versus time from different replicates along with the
+                average running integral and a vertical line corresponding to the
+                cutoff time used
+                (2) Std versus time
+                (3) Viscosity data and viscosity fit versus time
+                Defaults to False
+
+        Returns:
+            Final viscosity and std estimates
+        """
 
         idx = np.zeros((tot_replicates, num_replicates), dtype=int)
         for i in range(tot_replicates):
