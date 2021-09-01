@@ -16,7 +16,6 @@ from matplotlib.ticker import ScalarFormatter
 from pymatgen.io.lammps import outputs
 
 from mdproptools.common import constants
-
 from mdproptools.utilities.plots import set_axis
 
 __author__ = "Matthew Bliss, Rasha Atwi"
@@ -45,6 +44,31 @@ class Viscosity:
         units="real",
         working_dir=None,
     ):
+        """
+        Class to calculate the viscosity of a solution from MD simulations. Uses
+        Green-Kubo correlation and follows the methods in: 10.1021/acs.jcim.9b00066 and
+        10.1021/acs.jctc.5b00351. Supports calculating the viscosity from one trajectory
+        or multiple replicates to get a statistical average and standard deviation.
+        If multiple replicates are available, bootstrapping can be done to obtain a
+        distribution of viscosity values. Fits the running integral viscosity to a
+        double exponential function which it analytically integrates to extrapolate to
+        infinite time.
+
+        Args:
+            log_pattern (str): pattern of the name of the LAMMPS log files
+            cutoff_time (int): simulation time to ignore in the autocorrelation
+            volume (float): volume of the simulation box in the same units specified as input
+            temp (flaot): temperature (K)
+            timestep (int or float): timestep used in the simulations in the same units
+                specified as input
+            acf_method (str): method used to calculate the autocorrelation function.
+                Options are:
+                    brute_force: not recommended for large series
+                    wkt: Wiener-Khinchin theorem as implemented in pylat/src/viscio.py
+                Defaults to wkt
+            units (str): units used in the LAMMMPS simulations; used to convert to SI units
+            working_dir (str): full path of the LAMMPS log files
+        """
         self.log_pattern = log_pattern
         self.cutoff_time = cutoff_time
         self.units = units
@@ -247,7 +271,7 @@ class Viscosity:
                 color="black",
                 label="fit",
             )
-            # TODO: add fit parameters
+            # TODO: add fit parameters to plot
             # ax3.annotate(
             #     r"$\mathrm{\mu = }$" + str(round(viscosity, 4)) + "Pa.s",
             #     xy=(0.5, 0),
