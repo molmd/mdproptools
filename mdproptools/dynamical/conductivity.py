@@ -61,6 +61,50 @@ class Conductivity:
         self.cl = int(len(self.dumps) / 2)
         self.time = []  # time data used to calculate GK integral
 
+    @staticmethod
+    def correlate(a, b):
+        al = np.concatenate((a, np.zeros(len(a))), axis=0)
+        bl = np.concatenate((b, np.zeros(len(b))), axis=0)
+        c = np.fft.ifft(np.fft.fft(al) * np.conjugate(np.fft.fft(bl))).real
+        d = c[: len(c) // 2]
+        d /= (np.arange(len(d)) + 1)[::-1]
+        return d
+
+    @staticmethod
+    def detect_time_range(flux, tol=1e-4):
+        flux = pd.Series(flux, name="flux")
+        time_step = max(int(len(flux) / 1000), 5)
+        ind = [i // time_step for i in range(len(flux))]
+        flux_groupby = flux.groupby(ind)
+        flux_std = flux_groupby.transform("std")
+        flux_std = (flux_std < tol).astype("int").to_frame()
+        flux_std = (
+            flux_std.rolling(
+                window=4 * time_step + 1, min_periods=3 * time_step + 1, center=True
+            )
+            .median()
+            .fillna(0)["flux"]
+            .to_list()
+        )
+        s_e_list = []
+        found_start = False
+        for k, v in enumerate(flux_std):
+            if v == 1 and not found_start:
+                s_e_list.append((k,))
+                found_start = True
+            elif v < 1 and found_start:
+                s_e_list[-1] = s_e_list[-1] + (k,)
+                found_start = False
+        if s_e_list and len(s_e_list[-1]) == 1:
+            s_e_list[-1] = s_e_list[-1] + (len(flux_std) - 1,)
+        max_s_e = 0
+        max_s_e_ind = None
+        for s_e_ind, s_e in enumerate(s_e_list):
+            if s_e[1] - s_e[0] > max_s_e:
+                max_s_e = s_e[1] - s_e[0]
+                max_s_e_ind = s_e_ind
+        return s_e_list[max_s_e_ind]
+
     def get_charge_flux(self):
         inputs = []
         for ind, dump in enumerate(self.dumps):
@@ -104,10 +148,12 @@ class Conductivity:
         for i in range(0, len(self.tot_flux)):
             self.integral[i][1:] = cumtrapz(self.tot_flux[i], dx=delta)
 
-    def fit_curve(self, time_range=None):
+    def fit_curve(self, tol=1e-4):
         for i in range(len(self.integral)):
             time_range_ind = self.detect_time_range(self.integral[i], tol=tol)
-            self.ave[i] = np.average(self.integral[i][time_range_ind[0]:time_range_ind[1]])
+            self.ave[i] = np.average(
+                self.integral[i][time_range_ind[0] : time_range_ind[1]]
+            )
 
     def green_kubo(self, temp=298.15):
         for i in range(len(self.ave)):
