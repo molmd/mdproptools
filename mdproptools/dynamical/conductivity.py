@@ -19,7 +19,8 @@ from pymatgen.io.lammps.outputs import parse_lammps_dumps
 
 from mdproptools.common import constants
 from mdproptools.common.com_mols import calc_com
-from mdproptools.dynamical.residence_time import _set_axis
+from mdproptools.utilities.plots import set_axis
+from mdproptools.dynamical._conductivity import conductivity_loop
 
 __author__ = "Rasha Atwi"
 __maintainer__ = "Rasha Atwi"
@@ -57,8 +58,6 @@ class Conductivity:
         self.integral = np.zeros((len(self.tot_flux), len(self.tot_flux[0])))
         self.ave = np.zeros((len(self.integral)))
         self.cond = np.zeros((len(self.ave)))
-        # number of points for averaging correlations over multiple time origins
-        self.cl = int(len(self.dumps) / 2)
         self.time = []  # time data used to calculate GK integral
 
     @staticmethod
@@ -134,15 +133,6 @@ class Conductivity:
                     self.tot_flux[i, :] += corr
                     self.tot_flux[-1, :] += corr
 
-    @staticmethod
-    def correlate(a, b):
-        al = np.concatenate((a, np.zeros(len(a))), axis=0)
-        bl = np.concatenate((b, np.zeros(len(b))), axis=0)
-        c = np.fft.ifft(np.fft.fft(al) * np.conjugate(np.fft.fft(bl))).real
-        d = c[: len(c) // 2]
-        d /= (np.arange(len(d)) + 1)[::-1]
-        return d
-
     def integrate_charge_flux_correlation(self):
         delta = self.timestep * (self.time[1] - self.time[0])
         for i in range(0, len(self.tot_flux)):
@@ -190,7 +180,7 @@ class Conductivity:
         paired = plt.get_cmap("Paired")
         colors = iter(paired(np.linspace(0, 1, 10)))
         fig, ax = plt.subplots(figsize=(8, 6))
-        _set_axis(ax, axis="both")
+        set_axis(ax, axis="both")
         for i in range(len(self.tot_flux)):
             ax.plot(
                 np.array(self.time),
@@ -215,7 +205,7 @@ class Conductivity:
         paired = plt.get_cmap("Paired")
         colors = iter(paired(np.linspace(0, 1, 10)))
         fig, ax = plt.subplots(figsize=(8, 6))
-        _set_axis(ax, axis="both")
+        set_axis(ax, axis="both")
         for i in range(len(self.integral)):
             ax.plot(
                 np.array(self.time),
