@@ -17,6 +17,7 @@ from matplotlib.ticker import ScalarFormatter
 
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
 
+from mdproptools.common import constants
 from mdproptools.common.com_mols import calc_com
 from mdproptools.dynamical.residence_time import _set_axis
 
@@ -36,16 +37,20 @@ class Conductivity:
         num_atoms_per_mol,
         mass=None,
         timestep=1,
+        units="real",
         working_dir=None,
     ):
         self.working_dir = working_dir or os.getcwd()
         self.dumps = list(parse_lammps_dumps(f"{self.working_dir}/{filename}"))
-        self.dt = timestep
         self.mass = mass
         self.num_mols = num_mols
         self.num_atoms_per_mol = num_atoms_per_mol
+        self.units = units
         box_lengths = self.dumps[0].box.to_lattice().lengths
-        self.volume = np.prod(box_lengths) / 10 ** 30  # volume in m^3
+        self.volume = (
+            np.prod(box_lengths) * constants.DISTANCE_CONVERSION[self.units] ** 3
+        )  # volume in m^3
+        self.timestep = timestep
         # prepare empty charge flux of shape (xyz, # molecule types, # steps)
         self.j = np.zeros((3, len(self.num_mols), len(self.dumps)))
         self.tot_flux = np.zeros((len(self.num_mols) + 1, self.j.shape[2]))
@@ -95,7 +100,7 @@ class Conductivity:
         return d
 
     def integrate_charge_flux_correlation(self):
-        delta = self.dt * (self.time[1] - self.time[0])
+        delta = self.timestep * (self.time[1] - self.time[0])
         for i in range(0, len(self.tot_flux)):
             self.integral[i][1:] = cumtrapz(self.tot_flux[i], dx=delta)
 
@@ -105,10 +110,8 @@ class Conductivity:
             self.ave[i] = np.average(self.integral[i][time_range_ind[0]:time_range_ind[1]])
 
     def green_kubo(self, temp=298.15):
-        k = 1.38e-23
-        el = 1.60217e-19
         for i in range(len(self.ave)):
-            self.cond[i] = self.ave[i] / 3 / k / temp / self.volume * el ** 2 / 10 ** 5
+            self.cond[i] = self.ave[i] / 3 / constants.BOLTZMANN / temp / self.volume
 
     def save(self):
         charge_flux = np.append(np.array([self.time]), self.tot_flux, axis=0)
