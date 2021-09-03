@@ -6,6 +6,8 @@ Calculates the ionic conductivity from LAMMPS trajectory files.
 
 import os
 
+from multiprocessing import Pool, cpu_count
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -55,38 +57,24 @@ class Conductivity:
         self.time = []  # time data used to calculate GK integral
 
     def get_charge_flux(self):
+        inputs = []
         for ind, dump in enumerate(self.dumps):
-            print(f"Processing frame number: {ind} out of {len(self.dumps)}")
-            # if ind < self.cl:
-            #     self.time.append(dump.timestep * self.dt)
-            self.time.append(dump.timestep)
-            dump.data = dump.data.sort_values(by=["id"])
-            dump.data.reset_index(inplace=True)
-            # get dataframe with mol type, mol id, vx, vy, vz, mass, q
-            df = calc_com(dump, self.num_mols, self.num_atoms_per_mol, self.mass,
-                          atom_attributes=["vx", "vy", "vz"], calc_charge=True)
+            inputs.append(
+                (
+                    dump,
+                    self.num_mols,
+                    self.num_atoms_per_mol,
+                    self.mass,
+                    ind,
+                    self.units,
+                )
+            )
 
-            def dot(x):
-                return np.dot(x, df.loc[x.index, "q"])
-
-            # for each mol type at a given time, calculate charge flux
-            flux = df.groupby("type").agg({"vx": dot, "vy": dot, "vz": dot})
-            self.j[:, :, ind] = flux.reset_index().drop("type", axis=1).T.values
-            print("Finished computing charge flux for timestep", dump.timestep)
-
-    # def _correlate_charge_flux(self):
-    #     # TODO: np.correlate, put in common module (similar method in r.t)
-    #     # calculate contribution from each molecule type
-    #     self.tot_flux = np.zeros((len(self.num_mols) + 1, self.cl))
-    #     for i in range(len(self.num_mols)):
-    #         for j in range(len(self.num_mols)):
-    #             for delta_t in range(self.cl):
-    #                 for t in range(self.cl):
-    #                     self.tot_flux[i, delta_t] += \
-    #                         np.sum(self.j[:, i, t] * self.j[:, j, t + delta_t])
-    #                 self.tot_flux[i, delta_t] /= self.cl
-    #     # add the total flux to the end
-    #     self.tot_flux[-1, :] = self.tot_flux[0:-1, :].sum(axis=0)
+        p = Pool(cpu_count() - 1)
+        res = p.starmap(conductivity_loop, inputs)
+        for i in res:
+            self.time.append(i[0])
+            self.j[:, :, i[1]] = i[2]
 
     def correlate_charge_flux(self):
         # calculate contribution from each molecule type
@@ -113,12 +101,8 @@ class Conductivity:
 
     def fit_curve(self, time_range=None):
         for i in range(len(self.integral)):
-            if not time_range:
-                self.ave[i] = np.average(self.integral[i])
-            else:
-                begin_ind = np.where(np.array(self.time) == time_range[0])[0][0]
-                end_ind = np.where(np.array(self.time) == time_range[1])[0][0]
-                self.ave[i] = np.average(self.integral[i][begin_ind:end_ind])
+            time_range_ind = self.detect_time_range(self.integral[i], tol=tol)
+            self.ave[i] = np.average(self.integral[i][time_range_ind[0]:time_range_ind[1]])
 
     def green_kubo(self, temp=298.15):
         k = 1.38e-23
