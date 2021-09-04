@@ -26,7 +26,7 @@ __author__ = "Rasha Atwi"
 __maintainer__ = "Rasha Atwi"
 __email__ = "rasha.atwi@stonybrook.edu"
 __status__ = "Development"
-__date__ = "Jan 2021"
+__date__ = "Sep 2021"
 __version__ = "0.0.1"
 
 
