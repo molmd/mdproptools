@@ -50,6 +50,7 @@ class Conductivity:
         num_mols,
         num_atoms_per_mol,
         mass=None,
+        temp=298.15,
         timestep=1,
         units="real",
         working_dir=None,
@@ -85,13 +86,8 @@ class Conductivity:
         self.volume = (
             np.prod(box_lengths) * constants.DISTANCE_CONVERSION[self.units] ** 3
         )  # volume in m^3
+        self.temp = temp
         self.timestep = timestep
-        # prepare empty charge flux of shape (xyz, # molecule types, # steps)
-        self.j = np.zeros((3, len(self.num_mols), len(self.dumps)))
-        self.tot_flux = np.zeros((len(self.num_mols) + 1, self.j.shape[2]))
-        self.integral = np.zeros((len(self.tot_flux), len(self.tot_flux[0])))
-        self.ave = np.zeros((len(self.integral)))
-        self.cond = np.zeros((len(self.ave)))
         self.time = []  # time data used to calculate GK integral
 
     @staticmethod
@@ -170,6 +166,7 @@ class Conductivity:
             j (array-like): Charge fluxes of shape (3, # molecule types, # time steps)
         """
         inputs = []
+        j = np.zeros((3, len(self.num_mols), len(self.dumps)))
         for ind, dump in enumerate(self.dumps):
             inputs.append(
                 (
@@ -185,8 +182,13 @@ class Conductivity:
         p = Pool(cpu_count() - 1)
         res = p.starmap(conductivity_loop, inputs)
         for i in res:
-            self.time.append(i[0])
-            self.j[:, :, i[1]] = i[2]
+            self.time.append(i[0] * self.timestep)
+            j[:, :, i[1]] = i[2]
+        return j
+
+    def correlate_charge_flux(self, flux):
+        """
+        Calculates the charge flux correlation function for each molecule type.
 
         Args:
             flux (array-like): Charge flux for each molecule type
