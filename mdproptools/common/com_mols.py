@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def calc_com(
@@ -27,14 +28,14 @@ def calc_com(
     Returns:
         pd.Dataframe with mol types, mol ids, com attributes, molecule mass, and q (optional)
     """
-    mol_types = []
-    mol_ids = []
-
-    for mol_type, number_of_mols in enumerate(num_mols):
-        for mol_id in range(number_of_mols):
-            for atom_id in range(num_atoms_per_mol[mol_type]):
-                mol_types.append(mol_type + 1)
-                mol_ids.append(mol_id + 1)
+    mol_types = [mol_type + 1
+                   for mol_type, number_of_mols in enumerate(num_mols)
+                   for mol_id in range(number_of_mols)
+                   for atom_id in range(num_atoms_per_mol[mol_type])]
+    mol_ids = [mol_id + 1
+                   for mol_type, number_of_mols in enumerate(num_mols)
+                   for mol_id in range(number_of_mols)
+                   for atom_id in range(num_atoms_per_mol[mol_type])]
     if calc_charge:
         attributes = atom_attributes + ["q"]
     else:
@@ -42,22 +43,16 @@ def calc_com(
     if not mass:
         assert "mass" in dump.data.columns, "Missing atom masses in dump file."
         columns = ["id", "type", "mass"] + attributes
-        df = pd.DataFrame(dump.data[columns], columns=columns)
+        df = dump.data[columns].copy()
     else:
         columns = ["id", "type"] + attributes
-        df = pd.DataFrame(dump.data[columns], columns=columns)
+        df = dump.data[columns].copy()
         df["mass"] = df.apply(lambda x: mass[int(x.type - 1)], axis=1)
-
-    df["mol_type"] = mol_types
-    df["mol_id"] = mol_ids
-    df = df.drop(["type", "id"], axis=1).set_index(["mol_type", "mol_id"])
-    mol_df = df.groupby(["mol_type", "mol_id"]).apply(
-        lambda x: pd.Series(
-            x["mass"].values @ x[atom_attributes].values / x.mass.sum(),
-            index=atom_attributes,
-        )
-    )
-    mol_df["mass"] = df.groupby(["mol_type", "mol_id"])["mass"].sum()
-    if calc_charge:
-        mol_df["q"] = df.groupby(["mol_type", "mol_id"])["q"].sum()
-    return mol_df.reset_index().rename(columns={"mol_type": "type"})
+    df["mol_type"] = np.array(mol_types)
+    df["mol_id"] = np.array(mol_ids)
+    df = df.drop(["type", "id"], axis=1)
+    df[atom_attributes] = df[atom_attributes].multiply(df['mass'], axis=0)
+    mol_df = df.groupby(['mol_type', 'mol_id']).sum()
+    mol_df[atom_attributes] = mol_df[atom_attributes].divide(mol_df['mass'], axis=0)
+    mol_df.index = mol_df.index.rename("type", level= "mol_type")
+    return mol_df
