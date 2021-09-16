@@ -194,7 +194,7 @@ class Viscosity:
 
     def calc_avg_visc(self, output_all_data=False):
         """
-        Parses LAMMPS log files for the pressure tensors and calculates the
+        Parses LAMMPS log files (replicates) for the pressure tensors and calculates the
         viscosity from each replicate while ignoring the first few steps corresponding
         to the cutoff_time.
 
@@ -329,13 +329,11 @@ class Viscosity:
             ax1.axvline(
                 time_data[idx_cut_time], linewidth=2, color="black", linestyle="--"
             )
-            ax1.set_xlabel(r"$\mathrm{Time, 10^9 (m^2/s)}$", fontsize=18)
             ax1.set_ylabel(r"$\mathrm{\mu \ (Pa.s)}$", fontsize=18)
 
             ax2 = ax[1]
             set_axis(ax2, axis="both")
             ax2.plot(time_data, std[0:-1], linewidth=2, color="black")
-            ax2.set_xlabel(r"$\mathrm{Time, 10^9 (s)}$", fontsize=18)
             ax2.set_ylabel(r"$\mathrm{\sigma \ (Pa.s)}$", fontsize=18)
 
             ax3 = ax[2]
@@ -366,10 +364,10 @@ class Viscosity:
             #     va="bottom",
             # )
             ax3.legend(fontsize=16, loc="lower right", frameon=False)
-            ax3.set_xlabel(r"$\mathrm{Time, 10^9 (m^2/s)}$", fontsize=18)
             ax3.set_ylabel(r"$\mathrm{\mu \ (Pa.s)}$", fontsize=18)
 
             for axis in [ax1, ax2, ax3]:
+                axis.set_xlabel(r"$\mathrm{Time, 10^9 (m^2/s)}$", fontsize=18)
                 axis.xaxis.set_major_formatter(ScalarFormatter())
                 y_formatter = ScalarFormatter(useOffset=False)
                 axis.yaxis.set_major_formatter(y_formatter)
