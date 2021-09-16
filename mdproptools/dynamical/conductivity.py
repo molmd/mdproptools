@@ -30,6 +30,10 @@ __date__ = "Sep 2021"
 __version__ = "0.0.1"
 
 
+# TODO: Implement and test other methods for calculating conductivity (eg. Einstein
+#  relation, nernst)
+
+
 class Conductivity:
     """
     Class to calculate the ionic conductivity from MD simulations. Uses Green-Kubo
@@ -125,10 +129,13 @@ class Conductivity:
             List of the start and end indexes in the data where the function is near zero
         """
         flux = pd.Series(flux, name="flux")
-        time_step = max(int(len(flux) / 1000), 5)
+        time_step = max(int(len(flux) / 10000), 5)
         ind = [i // time_step for i in range(len(flux))]
         flux_groupby = flux.groupby(ind)
         flux_std = flux_groupby.transform("std")
+        std = flux_std.std()
+        div = std if std else 1 # to avoid dividing by zero
+        flux_std = flux_std/div
         flux_std = (flux_std < tol).astype("int").to_frame()
         flux_std = (
             flux_std.rolling(
@@ -284,7 +291,8 @@ class Conductivity:
                 end time considered in the calculations
 
         Returns:
-            cond (array-like): Total and molecular ionic conductivities in S/m
+            cond (array-like): Ionic conductivities (S/m) in the same order of molecule
+            inputs to PackmolRunner followed by the total conductivity
         """
         j = self.get_charge_flux()
         tot_flux = self.correlate_charge_flux(j)
@@ -322,7 +330,6 @@ class Conductivity:
                 )
             ax2.plot(time_data, integral[-1], label="total", linewidth=2, color="black")
             ax2.legend(
-                ncol=int(len(integral) / 2),
                 fontsize=16,
                 loc="center left",
                 bbox_to_anchor=(1, 0.5),
@@ -336,10 +343,10 @@ class Conductivity:
             for axis in [ax1, ax2]:
                 # plots time range used in the total conductivity only
                 axis.axvline(
-                    time_range[-1][0], linewidth=2, color="black", linestyle="--"
+                    time_range[-1][0]*10**9, linewidth=2, color="black", linestyle="--"
                 )
                 axis.axvline(
-                    time_range[-1][1], linewidth=2, color="black", linestyle="--"
+                    time_range[-1][1]*10**9, linewidth=2, color="black", linestyle="--"
                 )
                 axis.set_xscale("log")
                 axis.set_xlabel(r"$\mathrm{Time, 10^9 (s)}$", fontsize=18)
@@ -383,7 +390,7 @@ class Conductivity:
                 f"{self.working_dir}/conductivity.csv",
                 cond.T,
                 delimiter=",",
-                header="start_t,end_t" + "," + mol_names,
+                header="start_t,end_t,cond",
                 comments="",
             )
         return cond
