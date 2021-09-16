@@ -9,13 +9,12 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 
 from scipy.optimize import curve_fit
-from matplotlib.ticker import AutoMinorLocator
 
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
 
+from mdproptools.utilities.plots import set_axis
 from mdproptools.structural.rdf_cn import _calc_rsq
 
 __author__ = "Rasha Atwi"
@@ -24,38 +23,6 @@ __email__ = "rasha.atwi@stonybrook.edu"
 __status__ = "Development"
 __date__ = "Mar 2021"
 __version__ = "0.0.1"
-
-
-# TODO: move this to a common module
-def _set_axis(ax, axis="both"):
-    if axis == "both":
-        ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-        ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-        ax.xaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda x, _: "{:g}".format(x))
-        )
-        ax.yaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda y, _: "{:g}".format(y))
-        )
-        ax.tick_params(which="major", length=8)
-        ax.tick_params(which="minor", length=4)
-        ax.tick_params(axis="both", which="both", direction="in", labelsize=20)
-    elif axis == "x":
-        ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-        ax.xaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda x, _: "{:g}".format(x))
-        )
-        ax.tick_params(which="major", length=8)
-        ax.tick_params(which="minor", length=4)
-        ax.tick_params(axis="x", which="both", direction="in", labelsize=20)
-    elif axis == "y":
-        ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-        ax.yaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda y, _: "{:g}".format(y))
-        )
-        ax.tick_params(which="major", length=8)
-        ax.tick_params(which="minor", length=4)
-        ax.tick_params(axis="y", which="both", direction="in", labelsize=20)
 
 
 # TODO: COM - sanity checks (wrapped coords ...) - unique atom ids -
@@ -159,7 +126,7 @@ class ResidenceTime:
         for atom_pair in self.atom_pairs:
             try:
                 fig, ax = plt.subplots(figsize=(8, 6))
-                _set_axis(ax)
+                set_axis(ax)
                 fit = self._exp_func(
                     self.corr_df["Time (ps)"], *self.res_time_df[atom_pair][0:8].values
                 )
