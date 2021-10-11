@@ -28,14 +28,18 @@ def calc_com(
     Returns:
         pd.Dataframe with mol types, mol ids, com attributes, molecule mass, and q (optional)
     """
-    mol_types = [mol_type + 1
-                   for mol_type, number_of_mols in enumerate(num_mols)
-                   for mol_id in range(number_of_mols)
-                   for atom_id in range(num_atoms_per_mol[mol_type])]
-    mol_ids = [mol_id + 1
-                   for mol_type, number_of_mols in enumerate(num_mols)
-                   for mol_id in range(number_of_mols)
-                   for atom_id in range(num_atoms_per_mol[mol_type])]
+    mol_types = [
+        mol_type + 1
+        for mol_type, number_of_mols in enumerate(num_mols)
+        for mol_id in range(number_of_mols)
+        for atom_id in range(num_atoms_per_mol[mol_type])
+    ]
+    mol_ids = [
+        mol_id + 1
+        for mol_type, number_of_mols in enumerate(num_mols)
+        for mol_id in range(number_of_mols)
+        for atom_id in range(num_atoms_per_mol[mol_type])
+    ]
     if calc_charge:
         attributes = atom_attributes + ["q"]
     else:
@@ -51,8 +55,8 @@ def calc_com(
     df["mol_type"] = np.array(mol_types)
     df["mol_id"] = np.array(mol_ids)
     df = df.drop(["type", "id"], axis=1)
-    df[atom_attributes] = df[atom_attributes].multiply(df['mass'], axis=0)
-    mol_df = df.groupby(['mol_type', 'mol_id']).sum()
-    mol_df[atom_attributes] = mol_df[atom_attributes].divide(mol_df['mass'], axis=0)
-    mol_df.index = mol_df.index.rename("type", level= "mol_type")
+    df[atom_attributes] = df[atom_attributes].multiply(df["mass"], axis=0)
+    mol_df = df.groupby(["mol_type", "mol_id"]).sum()
+    mol_df[atom_attributes] = mol_df[atom_attributes].divide(mol_df["mass"], axis=0)
+    mol_df.index = mol_df.index.rename("type", level="mol_type")
     return mol_df
