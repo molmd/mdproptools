@@ -65,6 +65,8 @@ def get_clusters(
         dumps = dumps
     else:
         dumps = [dumps[frame]]
+    
+    cluster_count = 0
     for index, dump in enumerate(dumps):
         print("Processing frame number: {}".format(index))
         lx = dump.box.bounds[0][1] - dump.box.bounds[0][0]
@@ -118,7 +120,6 @@ def get_clusters(
                 .reset_index()[["mol_type", "mol_id"]]
                 .merge(neighbor_df, on=["mol_type", "mol_id"])
             )
-            print(min_force_atoms)
             # if elements:
             # min_force_atoms['element'] = min_force_atoms['type'].map(elements)
             data_head = df[df["id"] == i][["id", "x", "y", "z"]].values[0]
@@ -148,11 +149,13 @@ def get_clusters(
                 f, header=False, index=False, sep="\t", float_format="%15.10f"
             )
             f.close()
+            cluster_count += 1
         print(
             "{} clusters written to *.xyz files".format(
                 len(df[df["type"] == atom_type]["id"])
             )
         )
+    return cluster_count
 
 
 def group_clusters(cluster_pattern, tolerance=0.1, working_dir=None):
