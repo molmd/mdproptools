@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from scipy import optimize, integrate
 from matplotlib.ticker import ScalarFormatter
 
-from pymatgen.io.lammps import outputs
+from pymatgen.io.lammps.outputs import parse_lammps_log
 
 from mdproptools.common import constants
 from mdproptools.utilities.plots import set_axis
@@ -210,7 +210,7 @@ class Viscosity:
         list_log_df = []
         log_files = glob.glob(f"{self.working_dir}/{self.log_pattern}")
         for file in log_files:
-            log_df = outputs.parse_lammps_log(file)
+            log_df = parse_lammps_log(file)
             list_log_df.append(log_df[0])
 
         # find the index corresponding to the cutoff_time
@@ -316,7 +316,7 @@ class Viscosity:
             time_data = self.time * self.step_to_s * 10 ** 9
 
             paired = plt.get_cmap("Paired")
-            colors = iter(paired(np.linspace(0, 1, 10)))
+            colors = iter(paired(np.linspace(0, 1, 50)))
 
             fig, ax = plt.subplots(1, 3, figsize=[20, 5], sharey=False)
             ax1 = ax[0]
