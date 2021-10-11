@@ -6,7 +6,7 @@ module_dir = os.path.dirname(os.path.abspath(__file__))
 
 setuptools.setup(
     name="mdproptools",
-    version="0.0.1",
+    version="0.0.2",
     author="Rasha Atwi, Matthew Bliss, Maxim Makeev",
     author_email="rasha.atwi@stonybrook.edu, matthew.bliss@stonybrook.edu, "
                  "maxim.makeev@stonybrook.edu",
