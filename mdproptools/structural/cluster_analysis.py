@@ -44,7 +44,7 @@ def _remove_boundary_effects(data_head, mol_data, lx, ly, lz, num_of_ids):
 
 
 def get_clusters(
-    dump_pattern,
+    filename,
     atom_type,
     r_cut,
     full_trajectory=False,
@@ -60,7 +60,7 @@ def get_clusters(
         elements = {i + 1: j for i, j in enumerate(elements)}
     if not working_dir:
         working_dir = os.getcwd()
-    dumps = list(parse_lammps_dumps(os.path.join(working_dir, dump_pattern)))
+    dumps = list(parse_lammps_dumps(filename))
     if full_trajectory:
         dumps = dumps
     else:
