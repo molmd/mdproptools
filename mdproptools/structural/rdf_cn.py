@@ -32,7 +32,7 @@ CON_CONSTANT = 1.660538921
 
 # TODO: For the same atom repeating in multiple molecules, calculate RDF between
 #  any atom and that atom in one specific molecule
-@numba.jit(cache=True, nopython=True, parallel=True)
+@numba.jit(cache=True, nopython=True)  # , parallel=True)
 def _calc_rsq(data_head, mol_data, lx, ly, lz, num_of_ids=1):
     # TODO: merge the new changes in this function with the ones in the most recent version
     """
@@ -58,7 +58,7 @@ def _calc_rsq(data_head, mol_data, lx, ly, lz, num_of_ids=1):
     return data_i, rsq
 
 
-@numba.jit(cache=True, nopython=True, parallel=True)
+@numba.jit(cache=True, nopython=True)  # , parallel=True)
 def _remove_outliers(data_i, rsq, r_cut, ddr):
     """
     Removes pairs with distances bigger than the cutoff radius.
@@ -69,7 +69,7 @@ def _remove_outliers(data_i, rsq, r_cut, ddr):
     return data_i
 
 
-@numba.jit(cache=True, nopython=True, parallel=True)
+@numba.jit(cache=True, nopython=True)  # , parallel=True)
 def _rdf_loop(
     data, relation_matrix, num_relations, lengths, r_cut, ddr, rdf_full, rdf_part
 ):
@@ -97,7 +97,7 @@ def _rdf_loop(
     return rdf_full, rdf_part
 
 
-@numba.jit(cache=True, nopython=True, parallel=True)
+@numba.jit(cache=True, nopython=True)  # , parallel=True)
 def _cn_loop(data, relation_matrix, num_relations, lengths, r_cut, ddr, cn):
     """
     Calculates coordination number between two atoms from a single LAMMPS
@@ -119,7 +119,7 @@ def _cn_loop(data, relation_matrix, num_relations, lengths, r_cut, ddr, cn):
     return cn
 
 
-@numba.jit(cache=True, nopython=True, parallel=True)
+@numba.jit(cache=True, nopython=True)  # , parallel=True)
 def _rdf_mol_loop(
     atom_data, mol_data, relation_matrix, num_relations, lengths, r_cut, ddr, rdf_part
 ):
@@ -141,7 +141,7 @@ def _rdf_mol_loop(
     return rdf_part
 
 
-@njit(cache=True)
+@numba.jit(cache=True, nopython=True)  # , parallel=True)
 def _cn_mol_loop(
     atom_data, mol_data, relation_matrix, num_relations, lengths, r_cut, ddr, cn
 ):
@@ -854,6 +854,53 @@ def calc_molecular_cn(
     final_df = _save_cn(relation_matrix, path_or_buff, cn_sum, save_mode)
     return final_df
 
+def calc_intermolecular_rdf(r_cut, bin_size, num_types, mass, partial_relations,
+                            filename, num_mols, num_atoms_per_mol,
+                            path_or_buff='rdf_mol.csv',
+                            save_mode=True):
+    # TODO: recheck this function, was written quickly for Li-S project
+    # TODO: prevent calculating rdf between the mol and itself
+    # from mdproptools.common.com_mols import calc_com
+    dumps, num_bins, radii, num_files, num_relations = \
+        _initialize(r_cut,
+                    bin_size,
+                    filename,
+                    partial_relations)
+    rdf_part_sum = np.zeros((num_relations, num_bins))
+    for dump in dumps:
+        start_traj_loop, ref_df, df = _define_dataframes(dump)
+        df = _define_mol_cols(df, num_mols, num_atoms_per_mol, mass)
+        # df = calc_com(df, num_mols, num_atoms_per_mol, mass, atom_attributes=["x", "y", "z"])
+        # ref_df = ref_df.drop('id', axis=1)
+        atom_types_col = 'type'
+        rho, rho_pairs, box_lengths, atom_types, object_types = \
+            _calc_props(dump, df, df, num_types, mass, num_relations,
+                        partial_relations, atom_types_col,
+                        num_atoms_per_mol=num_atoms_per_mol)
+
+        relation_matrix = np.asarray(partial_relations).transpose()
+        rdf_part = np.zeros((num_relations, num_bins))
+        st = time()
+        # atom_data = ref_df.values
+        mol_data = df.values
+        rdf_part = _rdf_mol_loop(mol_data, mol_data, relation_matrix,
+                                 num_relations, box_lengths, r_cut, bin_size,
+                                 rdf_part)
+        print("time:", time() - st)
+        print("Finished computing RDF for timestep", dump.timestep)
+
+        _, rdf_part = _normalize_rdf(bin_size, rho_pairs, atom_types,
+                                     partial_relations, num_relations, num_bins,
+                                     rdf_part)
+        rdf_part_sum += rdf_part
+
+        end_traj_loop = timer()
+        print('Trajectory loop took:', end_traj_loop - start_traj_loop, 's')
+
+    rdf_part_sum = rdf_part_sum / num_files
+    final_df = _save_rdf(radii, relation_matrix, path_or_buff, save_mode,
+                         rdf_part_sum)
+    return final_df
 
 if __name__ == "__main__":
     print()
