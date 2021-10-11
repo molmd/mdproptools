@@ -32,7 +32,7 @@ __version__ = "0.0.1"
 
 class Diffusion:
     def __init__(
-        self, timestep=1, units="real", working_dir=None,
+        self, timestep=1, units="real", outputs_dir=None, diff_dir=None 
     ):
         self.units = units
         if self.units not in constants.SUPPORTED_UNITS:
@@ -40,7 +40,8 @@ class Diffusion:
                 "Unit type not supported. Supported units are: "
                 + str(constants.SUPPORTED_UNITS)
             )
-        self.working_dir = working_dir or os.getcwd()
+        self.outputs_dir = outputs_dir or os.getcwd()
+        self.diff_dir = diff_dir or os.getcwd()
         self.timestep = timestep
 
     @staticmethod
@@ -93,7 +94,7 @@ class Diffusion:
         com_drift=False,
         avg_interval=False,
     ):
-        dumps = list(parse_lammps_dumps(f"{self.working_dir}/{filename}"))
+        dumps = list(parse_lammps_dumps(f"{self.outputs_dir}/{filename}"))
         msd_dfs = []
         for dump in dumps:
             assert "id" in dump.data.columns, "Missing atom id's in dump file."
@@ -161,7 +162,7 @@ class Diffusion:
         return msd, msd_all
 
     def get_msd_from_log(self, log_pattern):
-        log_files = glob.glob(f"{self.working_dir}/{log_pattern}")
+        log_files = glob.glob(f"{self.outputs_dir}/{log_pattern}")
         # based on pymatgen.io.lammps.outputs.parse_lammps_dumps function
         if len(log_files) > 1:
             pattern = r"%s" % log_pattern.replace("*", "([0-9]+)")
@@ -218,9 +219,9 @@ class Diffusion:
             ]
             if save:
                 if diff_names:
-                    diff_file = f"{self.working_dir}/diff_{diff_names[ind]}.txt"
+                    diff_file = f"{self.diff_dir}/diff_{diff_names[ind]}.txt"
                 else:
-                    diff_file = f"{self.working_dir}/diff_{ind+1}.txt"
+                    diff_file = f"{self.diff_dir}/diff_{ind + 1}.txt"
                 with open(diff_file, "w") as f:
                     f.write(str(model.summary()))
         ind = diff_names or [i + 1 for i in range(len(msd_col_names))]
@@ -276,10 +277,10 @@ class Diffusion:
                     figure.delaxes(ax=axis.flatten()[-1])
                 figure.tight_layout()
                 figure.savefig(
-                    f"{self.working_dir}/{name}", bbox_inches="tight", pad_inches=0.1,
+                    f"{self.diff_dir}/{name}", bbox_inches="tight", pad_inches=0.1,
                 )
 
-        diffusion.to_csv(f"{self.working_dir}/diffusion.csv")
+        diffusion.to_csv(f"{self.diff_dir}/diffusion.csv")
         print("Diffusion results written to a .csv file.")
         return diffusion
 
@@ -330,7 +331,7 @@ class Diffusion:
                     fig.delaxes(ax=axes.flatten()[-1])
                 fig.tight_layout()
                 fig.savefig(
-                    f"{self.working_dir}/diff_dist.png",
+                    f"{self.diff_dir}/diff_dist.png",
                     bbox_inches="tight",
                     pad_inches=0.1,
                 )
@@ -359,7 +360,7 @@ class Diffusion:
                 ax.locator_params(axis="y", nbins=6)
                 fig.tight_layout()
                 fig.savefig(
-                    f"{self.working_dir}/diff_dist.png",
+                    f"{self.diff_dir}/diff_dist.png",
                     bbox_inches="tight",
                     pad_inches=0.1,
                 )
