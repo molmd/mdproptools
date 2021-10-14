@@ -6,13 +6,18 @@ Extracts clusters within a cutoff distance from an atom from LAMMPS trajectory f
 
 import os
 import glob
+import ntpath
 import shutil
+import warnings
+
+from collections import Counter
 
 import numpy as np
 import pandas as pd
 
 from pymatgen.core.structure import Molecule
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
+from pymatgen.core.periodic_table import _pt_data
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from mdproptools.structural.rdf_cn import _calc_rsq, _calc_atom_type
@@ -65,7 +70,7 @@ def get_clusters(
         dumps = dumps
     else:
         dumps = [dumps[frame]]
-    
+
     cluster_count = 0
     for index, dump in enumerate(dumps):
         print("Processing frame number: {}".format(index))
@@ -158,12 +163,130 @@ def get_clusters(
     return cluster_count
 
 
+def get_unique_configurations(
+    cluster_pattern,
+    r_cut,
+    molecules,
+    type_coord_atoms=None,
+    working_dir=None,
+    find_top=True,
+    perc=None,
+    cum_perc=90,
+    mol_names=None,
+    zip=False,
+):
+    working_dir = working_dir or os.getcwd()
+    cluster_files = glob.glob(f"{working_dir}/{cluster_pattern}")
+    main_atoms = []
+    for mol in molecules:
+        main_atoms.append([str(i) for i in mol.species])
+    full_coord_mols = {"cluster": [], "num_mols": [], "coordinating_atoms": []}
+    for file in cluster_files:
+        mol = Molecule.from_file(file)
+        full_coord_mols["cluster"].append(ntpath.basename(file))
+        coord_atoms = mol.get_neighbors(mol[0], r_cut)
+        if type_coord_atoms:
+            coord_atoms = [
+                i for i in coord_atoms if i.species_string in type_coord_atoms
+            ]
+        cluster_atoms = [str(i) for i in mol.species]
+        coord_mols = {}
+        for ind, atoms in enumerate(main_atoms):
+            coord_mols[ind] = {"mol": [], "sites": []}
+            for idx in range(len(cluster_atoms)):
+                if cluster_atoms[idx : idx + len(atoms)] == atoms:
+                    sub_mol = mol[idx : idx + len(atoms)]
+                    coord_mols[ind]["mol"].append(sub_mol)
+            for idx, sub_mol in enumerate(coord_mols[ind]["mol"]):
+                coords = []
+                for coord_atom in coord_atoms:
+                    if coord_atom in sub_mol:
+                        coords.append(coord_atom.species_string)
+                coord_mols[ind]["sites"].append(coords)
+            coord_mols[ind]["num_mol"] = len(coord_mols[ind]["mol"])
+            del coord_mols[ind]["mol"]
+        full_coord_mols["num_mols"].append(
+            list(coord_mols[k]["num_mol"] for k in coord_mols)
+        )
+        full_coord_mols["coordinating_atoms"].append(
+            list(coord_mols[k]["sites"] for k in coord_mols)
+        )
+
+    full_str_coord = []
+    for i in full_coord_mols["coordinating_atoms"]:
+        str_coord = []
+        for j in i:
+            str_full = []
+            for k in j:
+                c = dict(Counter(x[0] for x in k if x))
+                str_full.append("".join(f"{c[k]}{k}" for k in sorted(c)))
+            str_coord.append(":".join([i for i in sorted(str_full)]))
+        full_str_coord.append(str_coord)
+    full_coord_mols["coordinating_atoms"] = full_str_coord
+    df = pd.DataFrame.from_dict(full_coord_mols, "columns")
+    if mol_names:
+        num_col_names = [f"num_{i}" for i in mol_names]
+        atoms_col_names = [f"atoms_{i}" for i in mol_names]
+    else:
+        num_col_names = [f"num_{i+1}" for i in range(len(molecules))]
+        atoms_col_names = [f"atoms_{i + 1}" for i in range(len(molecules))]
+    split_df = pd.DataFrame(df["num_mols"].tolist(), columns=num_col_names,)
+    df = pd.concat([df, split_df], axis=1)
+    df = df.drop("num_mols", axis=1)
+    split_df = pd.DataFrame(df["coordinating_atoms"].tolist(), columns=atoms_col_names,)
+    df = pd.concat([df, split_df], axis=1)
+    df = df.drop("coordinating_atoms", axis=1)
+    df1 = (
+        df.groupby([i for i in df.columns if i != "cluster"])
+        .size()
+        .rename("count")
+        .reset_index()
+    )
+    df1.sort_values("count", ascending=False, inplace=True)
+    df1["%"] = df1["count"] * 100 / sum(df1["count"])
+    if find_top:
+        if cum_perc and perc:
+            warnings.warn(
+                "Two percentage types are provided for determining the top "
+                "configurations; using cum_perc"
+            )
+        if cum_perc:
+            top_config = df1[df1["%"].cumsum() <= cum_perc]
+        elif perc:
+            top_config = df1[df1["%"] >= perc]
+        else:
+            raise ValueError(
+                "No percentage type is provided for determining the top "
+                "configurations"
+            )
+        merge_cols = [i for i in list(df.columns) if i.startswith("atoms_")]
+        top_config = top_config.merge(
+            df[["cluster"] + merge_cols], on=merge_cols
+        ).drop_duplicates(merge_cols)
+        top_dir = f"{working_dir}/Top"
+        if os.path.exists(top_dir):
+            shutil.rmtree(top_dir)
+        os.makedirs(top_dir)
+        for cluster in top_config["cluster"]:
+            shutil.copy(f"{working_dir}/{cluster}", f"{working_dir}/Top/{cluster}")
+        top_config.to_csv(f"{working_dir}/top_config.csv", index=False)
+    df.to_csv(f"{working_dir}/clusters.csv", index=False)
+    df1.to_csv(f"{working_dir}/configurations.csv", index=False)
+    if zip:
+        clusters_dir = f"{working_dir}/Clusters"
+        os.mkdir(f"{working_dir}/Clusters")
+        for file in cluster_files:
+            shutil.move(file, f"{clusters_dir}/{ntpath.basename(file)}")
+        shutil.make_archive(f"{working_dir}/Clusters", "zip", clusters_dir)
+        shutil.rmtree(clusters_dir)
+    return df, df1
+
+
 def group_clusters(cluster_pattern, tolerance=0.1, working_dir=None):
     if not working_dir:
         working_dir = os.getcwd()
     mm = MoleculeMatcher(tolerance=tolerance)
     filename_list = glob.glob((os.path.join(working_dir, cluster_pattern)))
-    print(filename_list)
     mol_list = [Molecule.from_file(os.path.join(working_dir, f)) for f in filename_list]
     mol_groups = mm.group_molecules(mol_list)
     filename_groups = [
