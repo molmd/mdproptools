@@ -173,7 +173,7 @@ def get_unique_configurations(
     perc=None,
     cum_perc=90,
     mol_names=None,
-    zip=False,
+    zip=True,
 ):
     working_dir = working_dir or os.getcwd()
     cluster_files = glob.glob(f"{working_dir}/{cluster_pattern}")
@@ -267,8 +267,8 @@ def get_unique_configurations(
         if os.path.exists(top_dir):
             shutil.rmtree(top_dir)
         os.makedirs(top_dir)
-        for cluster in top_config["cluster"]:
-            shutil.copy(f"{working_dir}/{cluster}", f"{working_dir}/Top/{cluster}")
+        for ind, cluster in enumerate(top_config["cluster"]):
+            shutil.copy(f"{working_dir}/{cluster}", f"{working_dir}/Top/config_{ind+1}.xyz")
         top_config.to_csv(f"{working_dir}/top_config.csv", index=False)
     df.to_csv(f"{working_dir}/clusters.csv", index=False)
     df1.to_csv(f"{working_dir}/configurations.csv", index=False)
