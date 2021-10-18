@@ -263,12 +263,8 @@ def get_unique_configurations(
         top_config = top_config.merge(
             df[["cluster"] + merge_cols], on=merge_cols
         ).drop_duplicates(merge_cols)
-        top_dir = f"{working_dir}/Top"
-        if os.path.exists(top_dir):
-            shutil.rmtree(top_dir)
-        os.makedirs(top_dir)
         for ind, cluster in enumerate(top_config["cluster"]):
-            shutil.copy(f"{working_dir}/{cluster}", f"{working_dir}/Top/config_{ind+1}.xyz")
+            shutil.copy(f"{working_dir}/{cluster}", f"{working_dir}/config_{ind+1}.xyz")
         top_config.to_csv(f"{working_dir}/top_config.csv", index=False)
     df.to_csv(f"{working_dir}/clusters.csv", index=False)
     df1.to_csv(f"{working_dir}/configurations.csv", index=False)
