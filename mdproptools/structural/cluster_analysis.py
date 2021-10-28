@@ -264,8 +264,8 @@ def get_unique_configurations(
             df[["cluster"] + merge_cols], on=merge_cols
         ).drop_duplicates(merge_cols)
         for ind, cluster in enumerate(top_config["cluster"]):
-            shutil.copy(f"{working_dir}/{cluster}", f"{working_dir}/config_{ind+1}.xyz")
-        top_config.to_csv(f"{working_dir}/top_config.csv", index=False)
+            shutil.copy(f"{working_dir}/{cluster}", f"{working_dir}/conf_{ind+1}.xyz")
+        top_config.to_csv(f"{working_dir}/top_conf.csv", index=False)
     df.to_csv(f"{working_dir}/clusters.csv", index=False)
     df1.to_csv(f"{working_dir}/configurations.csv", index=False)
     if zip:
