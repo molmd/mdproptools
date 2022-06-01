@@ -5,12 +5,15 @@ Calculates the residence time from LAMMPS trajectory files.
 """
 
 import os
+import time
 
+import numba as nb
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from scipy.optimize import curve_fit
+from scipy.special import gamma
+from scipy.optimize import lsq_linear
 
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
 
@@ -32,7 +35,7 @@ class ResidenceTime:
         self.r_cut = r_cut
         self.relation_matrix = np.asarray(partial_relations).transpose()
         self.atom_pairs = []
-        self.dumps = list(parse_lammps_dumps(filename))
+        self.dumps = parse_lammps_dumps(filename)
         self.dt = dt * 10 ** -3  # input dt in fs - convert to ps
         self.corr_df = None
         self.res_time_df = None
