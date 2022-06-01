@@ -51,56 +51,78 @@ class ResidenceTime:
         )
 
     def calc_auto_correlation(self):
-        h_init = {}
         sum_h_init = {}
         h_matrix_dict = {}
-        cl = int(len(self.dumps) / 2)
         correlation = {"Time (ps)": []}
+
+        start = time.time()
         for ind, dump in enumerate(self.dumps):
             print("Processing frame number: {}".format(ind))
-            if ind < cl:
-                correlation["Time (ps)"].append(dump.timestep * self.dt)
+            correlation["Time (ps)"].append(dump.timestep * self.dt)
+
             lx, ly, lz = dump.box.to_lattice().lengths
             full_df = dump.data[["type", "x", "y", "z"]]
+
             for kl in range(0, len(self.relation_matrix)):
                 k, l = self.relation_matrix[kl]
                 atom_pair = f"{k}-{l}"
                 self.atom_pairs.append(atom_pair)
                 k_data = full_df[full_df["type"] == k].drop("type", axis=1).values
                 l_data = full_df[full_df["type"] == l].drop("type", axis=1).values
-                h_matrix = []
+
+                h_matrix = set()
                 for idx, k_row in enumerate(k_data):
                     data_i, rsq = _calc_rsq(k_row, l_data, lx, ly, lz, 0)
                     h = (rsq > self.r_cut[kl][0] ** 2) & (rsq <= self.r_cut[kl][1] ** 2)
                     if k == l:
                         h[idx] = False
-                    h_matrix.append(h.reshape(1, len(h)))
-                h_matrix = np.concatenate(h_matrix, axis=0)
+                    h_index_of_true_values = np.nonzero(h)
+                    # add by len(h) * idx, this is the same as the
+                    # non-zero index when h_matrix is reshaped into a 1-D array
+                    h_index_of_true_values = [
+                        i + (len(h) * idx) for i in h_index_of_true_values[0]
+                    ]
+                    h_matrix = h_matrix | set(h_index_of_true_values)
+
                 h_matrix_dict[atom_pair] = h_matrix_dict.get(atom_pair, []) + [h_matrix]
-                if atom_pair not in h_init:
-                    h_init[atom_pair] = h_matrix.copy()
-                    sum_h_init[atom_pair] = np.sum(h_init[atom_pair] ** 2)
-                    if sum_h_init[atom_pair] == 0:
-                        sum_h_init[atom_pair] = 0.1
             print(
                 "Finished computing auto-correlation function for timestep",
                 dump.timestep,
             )
+        end = time.time()
+        print(f"First loop took: {end - start}")
+
+        cl = int(len(correlation["Time (ps)"]) / 2)
+        correlation["Time (ps)"] = correlation["Time (ps)"][:cl]
+
+        start = time.time()
         for kl in range(0, len(self.relation_matrix)):
             k, l = self.relation_matrix[kl]
             atom_pair = f"{k}-{l}"
             correlation[atom_pair] = [0] * cl
+
+            h_matrix = h_matrix_dict.pop(atom_pair)
+            np_h_matrix = np.zeros(
+                (len(h_matrix), max([max(i) for i in h_matrix if i]) + 1), dtype="bool"
+            )
+            for row, column_set in enumerate(h_matrix):
+                np_h_matrix[row, list(column_set)] = True
+
+            zero_true = np.transpose(np_h_matrix[:cl, :].nonzero())
+
             for delta_time in range(cl):
-                for i in range(cl):
-                    s = (
-                        np.sum(
-                            h_matrix_dict[atom_pair][i]
-                            * h_matrix_dict[atom_pair][i + delta_time]
-                        )
-                        / sum_h_init[atom_pair]
-                    )
-                    correlation[atom_pair][delta_time] += s
-                correlation[atom_pair][delta_time] /= cl
+                if delta_time % 1000 == 0:
+                    print(atom_pair, delta_time, time.time() - start)
+                delta_time_shift_indices = np_h_matrix[delta_time : delta_time + cl]
+                result = find_intersection(zero_true, delta_time_shift_indices)
+                if delta_time == 0:
+                    sum_h_init[atom_pair] = result
+                # normalization
+                correlation[atom_pair][delta_time] = (
+                    result / sum_h_init[atom_pair]
+                )
+        end = time.time()
+        print(f"Second loop took: {end - start}")
         self.corr_df = pd.DataFrame.from_dict(correlation)
         self.corr_df.to_csv(self.working_dir + "/auto_correlation.csv")
 
