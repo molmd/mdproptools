@@ -24,12 +24,20 @@ __author__ = "Rasha Atwi"
 __maintainer__ = "Rasha Atwi"
 __email__ = "rasha.atwi@stonybrook.edu"
 __status__ = "Development"
-__date__ = "Mar 2021"
-__version__ = "0.0.1"
+__date__ = "May 2022"
+__version__ = "0.0.2"
+
+
+@nb.njit(cache=True)
+def find_intersection(a, b):
+    res = 0
+    for i in a:
+        res += b[i[0], i[1]]
+    return res
 
 
 # TODO: COM - sanity checks (wrapped coords ...) - unique atom ids -
-#  begin and end time (ignore first ps in fitting) - multi-exponential fitting
+#  begin and end time (ignore first ps in fitting) 
 class ResidenceTime:
     def __init__(self, r_cut, partial_relations, filename, dt=1, working_dir=None):
         self.r_cut = r_cut
