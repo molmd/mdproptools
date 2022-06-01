@@ -154,7 +154,7 @@ class ResidenceTime:
                 n_d = len(y_hat)
 
                 A = np.concatenate([np.ones((n_d, 1)), x_hat.reshape((n_d, 1))], axis=1)
-                model = lsq_linear(A, y_hat)
+                model = lsq_linear(A, y_hat, bounds=([-np.inf, -1], [np.inf, 0]))
                 beta = model.x[1] + 1
 
                 A = np.concatenate([np.ones((n, 1)), x.reshape((n, 1)) ** beta], axis=1)
