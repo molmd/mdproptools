@@ -135,10 +135,11 @@ class ResidenceTime:
 
     def fit_auto_correlation(self, plot=True):
         residence_time = {}
-        for col in self.corr_df:
+        corr_data = self.corr_df.head(int(len(df)*0.5)) # take first half of the data
+        for col in corr_data:
             if col != "Time (ps)":
-                x = self.corr_df["Time (ps)"].values + 1
-                y = self.corr_df[col].values
+                x = scorr_data["Time (ps)"].values + 1
+                y = scorr_data[col].values
                 y = np.array(
                     [j + (1e-16 * (len(y) - i) / len(y)) for i, j in enumerate(y)]
                 )
@@ -165,21 +166,21 @@ class ResidenceTime:
                 tau = (-1 / model.x[1]) ** (1 / beta)
 
                 fit_data = self._stretched_exp_function(
-                    a, tau, beta, self.corr_df["Time (ps)"].values
+                    a, tau, beta, corr_data["Time (ps)"].values
                 )
-                diff_int = np.trapz(self.corr_df[col].values - fit_data)
+                diff_int = np.trapz(corr_data[col].values - fit_data)
                 residence_time[col] = [self._integrate_sum_exp(a, tau, beta) + diff_int]
                 if plot:
                     fig, ax = plt.subplots(figsize=(8, 6))
                     set_axis(ax)
                     ax.scatter(
-                        self.corr_df["Time (ps)"],
-                        self.corr_df[col],
+                        corr_data["Time (ps)"],
+                        corr_data[col],
                         color="red",
                         label="original",
                     )
                     ax.plot(
-                        self.corr_df["Time (ps)"], fit_data, color="black", label="fit"
+                        corr_data["Time (ps)"], fit_data, color="black", label="fit"
                     )
                     ax.legend(frameon=False, fontsize=20)
                     ax.set_xlabel("Time (ps)", fontsize=20)
