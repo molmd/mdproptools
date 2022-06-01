@@ -42,13 +42,12 @@ class ResidenceTime:
         self.working_dir = working_dir or os.getcwd()
 
     @staticmethod
-    def _exp_func(t, a1, a2, a3, a4, tau1, tau2, tau3, tau4):
-        return (
-            a1 * np.exp(-t / tau1)
-            + a2 * np.exp(-t / tau2)
-            + a3 * np.exp(-t / tau3)
-            + a4 * np.exp(-t / tau4)
-        )
+    def _stretched_exp_function(a, tau, beta, x):
+        return a * np.exp(-((x / tau) ** beta))
+
+    @staticmethod
+    def _integrate_sum_exp(a, tau, beta):
+        return a * tau * gamma(1 + 1 / beta)
 
     def calc_auto_correlation(self):
         sum_h_init = {}
@@ -126,52 +125,67 @@ class ResidenceTime:
         self.corr_df = pd.DataFrame.from_dict(correlation)
         self.corr_df.to_csv(self.working_dir + "/auto_correlation.csv")
 
-    def fit_auto_correlation(self):
+    def fit_auto_correlation(self, plot=True):
         residence_time = {}
-        a_opt = [f"a{i}" for i in range(1, 5)]
-        tau_opt = [f"tau{i}" for i in range(1, 5)]
         for col in self.corr_df:
             if col != "Time (ps)":
-                residence_time[col] = {}
-                x = self.corr_df["Time (ps)"]
-                y = self.corr_df[col]
-                popt, _ = curve_fit(self._exp_func, x, y, maxfev=1000000)
-                fit = self._exp_func(x, *popt)
-                for i, j in enumerate(a_opt + tau_opt):
-                    residence_time[col][j] = popt[i]
-                residence_time[col]["error"] = np.sum((y - fit) ** 2)
-                residence_time[col]["residence_time (ps)"] = np.sum(
-                    np.multiply(popt[0:4], popt[4:])
+                x = self.corr_df["Time (ps)"].values + 1
+                y = self.corr_df[col].values
+                y = np.array(
+                    [j + (1e-16 * (len(y) - i) / len(y)) for i, j in enumerate(y)]
                 )
+                valid_y = y > 0
+                x = x[valid_y]
+                y = y[valid_y]
+                n = len(y)
+
+                log_y = np.log(y)
+                log_y_prime = np.gradient(log_y)
+
+                negative_log_y_prime = log_y_prime < 0
+                y_hat = np.log(-log_y_prime[negative_log_y_prime])
+                x_hat = np.log(x[negative_log_y_prime])
+                n_d = len(y_hat)
+
+                A = np.concatenate([np.ones((n_d, 1)), x_hat.reshape((n_d, 1))], axis=1)
+                model = lsq_linear(A, y_hat)
+                beta = model.x[1] + 1
+
+                A = np.concatenate([np.ones((n, 1)), x.reshape((n, 1)) ** beta], axis=1)
+                model = lsq_linear(A, log_y)
+                a = np.exp(model.x[0])
+                tau = (-1 / model.x[1]) ** (1 / beta)
+
+                fit_data = self._stretched_exp_function(
+                    a, tau, beta, self.corr_df["Time (ps)"].values
+                )
+                diff_int = np.trapz(self.corr_df[col].values - fit_data)
+                residence_time[col] = _integrate_sum_exp(a, tau, beta) + diff_int
+                if plot:
+                    fig, ax = plt.subplots(figsize=(8, 6))
+                    set_axis(ax)
+                    ax.scatter(
+                        self.corr_df["Time (ps)"],
+                        self.corr_df[col],
+                        color="red",
+                        label="original",
+                    )
+                    ax.plot(
+                        self.corr_df["Time (ps)"], fit_data, color="black", label="fit"
+                    )
+                    ax.legend(frameon=False, fontsize=20)
+                    ax.set_xlabel("Time (ps)", fontsize=20)
+                    ax.set_ylabel("C(t)", fontsize=20)
+                    fig.savefig(
+                        self.working_dir + f"/{col}_fit.png",
+                        bbox_inches="tight",
+                        pad_inches=0.1,
+                    )
+                    fig.close()
         print("Finished computing residence time")
         self.res_time_df = pd.DataFrame(residence_time)
         self.res_time_df.to_csv(self.working_dir + "/residence_time.csv")
-
-    def plot_results(self):
-        for atom_pair in self.atom_pairs:
-            try:
-                fig, ax = plt.subplots(figsize=(8, 6))
-                set_axis(ax)
-                fit = self._exp_func(
-                    self.corr_df["Time (ps)"], *self.res_time_df[atom_pair][0:8].values
-                )
-                ax.scatter(
-                    self.corr_df["Time (ps)"],
-                    self.corr_df[atom_pair],
-                    color="red",
-                    label="original",
-                )
-                ax.plot(self.corr_df["Time (ps)"], fit, color="black", label="fit")
-                ax.legend(frameon=False, fontsize=20)
-                ax.set_xlabel("Time (ps)", fontsize=20)
-                ax.set_ylabel("C(t)", fontsize=20)
-                fig.savefig(
-                    self.working_dir + f"/{atom_pair}_fit.png",
-                    bbox_inches="tight",
-                    pad_inches=0.1,
-                )
-            except Exception as e:
-                print(e)
+        return residence_time
 
 
 class Displacement:
