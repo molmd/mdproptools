@@ -98,6 +98,7 @@ class ResidenceTime:
 
         start = time.time()
         from statsmodels.tsa.stattools import acovf
+
         for kl in range(0, len(self.relation_matrix)):
             k, l = self.relation_matrix[kl]
             atom_pair = f"{k}-{l}"
@@ -113,18 +114,23 @@ class ResidenceTime:
                 if not max_cols:
                     continue
                 np_h_matrix = np.zeros(
-                    (len(h_matrix), max([max(i) for i in central_atom_h_matrix if i]) + 1), dtype="bool"
+                    (
+                        len(h_matrix),
+                        max([max(i) for i in central_atom_h_matrix if i]) + 1,
+                    ),
+                    dtype="bool",
                 )
                 for row in range(number_of_time_steps):
                     np_h_matrix[row, list(h_matrix[row][central_atom])] = True
 
                 for column in range(np_h_matrix.shape[1]):
-                    cov_col = acovf(np_h_matrix[:, column], demean=False, unbiased=True,
-                                 fft=True)
+                    cov_col = acovf(
+                        np_h_matrix[:, column], demean=False, unbiased=True, fft=True
+                    )
                     cov_mat.append(cov_col)
             corr_matrix = np.array(cov_mat)
             corr_array = np.mean(corr_matrix, axis=0)
-            corr_array = corr_array/corr_array[0]
+            corr_array = corr_array / corr_array[0]
             correlation[atom_pair] = corr_array
 
         end = time.time()
