@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 
 from scipy.special import gamma
 from scipy.optimize import lsq_linear
+from statsmodels.tsa.stattools import acovf
 
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
 
@@ -86,10 +87,6 @@ class ResidenceTime:
                     h_index_of_true_values = np.nonzero(h)
                     h_matrix.append(list(h_index_of_true_values[0]))
                 h_matrix_dict[atom_pair] = h_matrix_dict.get(atom_pair, []) + [h_matrix]
-            print(
-                "Finished computing auto-correlation function for timestep",
-                dump.timestep,
-            )
         end = time.time()
         print(f"First loop took: {end - start}")
 
@@ -97,8 +94,6 @@ class ResidenceTime:
         correlation["Time (ps)"] = correlation["Time (ps)"]
 
         start = time.time()
-        from statsmodels.tsa.stattools import acovf
-
         for kl in range(0, len(self.relation_matrix)):
             k, l = self.relation_matrix[kl]
             atom_pair = f"{k}-{l}"
@@ -132,9 +127,9 @@ class ResidenceTime:
             corr_array = np.mean(corr_matrix, axis=0)
             corr_array = corr_array / corr_array[0]
             correlation[atom_pair] = corr_array
-
         end = time.time()
         print(f"Second loop took: {end - start}")
+
         self.corr_df = pd.DataFrame.from_dict(correlation)
         self.corr_df.to_csv(self.working_dir + "/auto_correlation.csv")
 
