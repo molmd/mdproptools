@@ -135,11 +135,11 @@ class ResidenceTime:
 
     def fit_auto_correlation(self, plot=True):
         residence_time = {}
-        corr_data = self.corr_df.head(int(len(df)*0.5)) # take first half of the data
+        corr_data = self.corr_df.head(int(len(self.corr_df)*0.5)) # take first half of the data
         for col in corr_data:
             if col != "Time (ps)":
-                x = scorr_data["Time (ps)"].values + 1
-                y = scorr_data[col].values
+                x = corr_data["Time (ps)"].values + 1
+                y = corr_data[col].values
                 y = np.array(
                     [j + (1e-16 * (len(y) - i) / len(y)) for i, j in enumerate(y)]
                 )
