@@ -77,20 +77,14 @@ class ResidenceTime:
                 k_data = full_df[full_df["type"] == k].drop("type", axis=1).values
                 l_data = full_df[full_df["type"] == l].drop("type", axis=1).values
 
-                h_matrix = set()
+                h_matrix = []
                 for idx, k_row in enumerate(k_data):
                     data_i, rsq = _calc_rsq(k_row, l_data, lx, ly, lz, 0)
                     h = (rsq > self.r_cut[kl][0] ** 2) & (rsq <= self.r_cut[kl][1] ** 2)
                     if k == l:
                         h[idx] = False
                     h_index_of_true_values = np.nonzero(h)
-                    # add by len(h) * idx, this is the same as the
-                    # non-zero index when h_matrix is reshaped into a 1-D array
-                    h_index_of_true_values = [
-                        i + (len(h) * idx) for i in h_index_of_true_values[0]
-                    ]
-                    h_matrix = h_matrix | set(h_index_of_true_values)
-
+                    h_matrix.append(list(h_index_of_true_values[0]))
                 h_matrix_dict[atom_pair] = h_matrix_dict.get(atom_pair, []) + [h_matrix]
             print(
                 "Finished computing auto-correlation function for timestep",
@@ -100,32 +94,39 @@ class ResidenceTime:
         print(f"First loop took: {end - start}")
 
         cl = int(len(correlation["Time (ps)"]) / 2)
-        correlation["Time (ps)"] = correlation["Time (ps)"][:cl]
+        correlation["Time (ps)"] = correlation["Time (ps)"]
 
         start = time.time()
+        from statsmodels.tsa.stattools import acovf
         for kl in range(0, len(self.relation_matrix)):
             k, l = self.relation_matrix[kl]
             atom_pair = f"{k}-{l}"
             correlation[atom_pair] = [0] * cl
 
             h_matrix = h_matrix_dict.pop(atom_pair)
-            np_h_matrix = np.zeros(
-                (len(h_matrix), max([max(i) for i in h_matrix if i]) + 1), dtype="bool"
-            )
-            for row, column_set in enumerate(h_matrix):
-                np_h_matrix[row, list(column_set)] = True
+            number_of_time_steps = len(h_matrix)
+            number_of_central_atoms = len(h_matrix[0])
+            cov_mat = []
+            for central_atom in range(number_of_central_atoms):
+                central_atom_h_matrix = [[i for i in j[central_atom]] for j in h_matrix]
+                max_cols = [max(i) for i in central_atom_h_matrix if i]
+                if not max_cols:
+                    continue
+                np_h_matrix = np.zeros(
+                    (len(h_matrix), max([max(i) for i in central_atom_h_matrix if i]) + 1), dtype="bool"
+                )
+                for row in range(number_of_time_steps):
+                    np_h_matrix[row, list(h_matrix[row][central_atom])] = True
 
-            zero_true = np.transpose(np_h_matrix[:cl, :].nonzero())
+                for column in range(np_h_matrix.shape[1]):
+                    cov_col = acovf(np_h_matrix[:, column], demean=False, unbiased=True,
+                                 fft=True)
+                    cov_mat.append(cov_col)
+            corr_matrix = np.array(cov_mat)
+            corr_array = np.mean(corr_matrix, axis=0)
+            corr_array = corr_array/corr_array[0]
+            correlation[atom_pair] = corr_array
 
-            for delta_time in range(cl):
-                if delta_time % 1000 == 0:
-                    print(atom_pair, delta_time, time.time() - start)
-                delta_time_shift_indices = np_h_matrix[delta_time : delta_time + cl]
-                result = find_intersection(zero_true, delta_time_shift_indices)
-                if delta_time == 0:
-                    sum_h_init[atom_pair] = result
-                # normalization
-                correlation[atom_pair][delta_time] = result / sum_h_init[atom_pair]
         end = time.time()
         print(f"Second loop took: {end - start}")
         self.corr_df = pd.DataFrame.from_dict(correlation)
@@ -166,7 +167,7 @@ class ResidenceTime:
                     a, tau, beta, self.corr_df["Time (ps)"].values
                 )
                 diff_int = np.trapz(self.corr_df[col].values - fit_data)
-                residence_time[col] = _integrate_sum_exp(a, tau, beta) + diff_int
+                residence_time[col] = [self._integrate_sum_exp(a, tau, beta) + diff_int]
                 if plot:
                     fig, ax = plt.subplots(figsize=(8, 6))
                     set_axis(ax)
@@ -187,7 +188,7 @@ class ResidenceTime:
                         bbox_inches="tight",
                         pad_inches=0.1,
                     )
-                    fig.close()
+                    plt.close()
         print("Finished computing residence time")
         self.res_time_df = pd.DataFrame(residence_time)
         self.res_time_df.to_csv(self.working_dir + "/residence_time.csv")
