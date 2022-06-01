@@ -37,7 +37,7 @@ def find_intersection(a, b):
 
 
 # TODO: COM - sanity checks (wrapped coords ...) - unique atom ids -
-#  begin and end time (ignore first ps in fitting) 
+#  begin and end time (ignore first ps in fitting)
 class ResidenceTime:
     def __init__(self, r_cut, partial_relations, filename, dt=1, working_dir=None):
         self.r_cut = r_cut
@@ -125,9 +125,7 @@ class ResidenceTime:
                 if delta_time == 0:
                     sum_h_init[atom_pair] = result
                 # normalization
-                correlation[atom_pair][delta_time] = (
-                    result / sum_h_init[atom_pair]
-                )
+                correlation[atom_pair][delta_time] = result / sum_h_init[atom_pair]
         end = time.time()
         print(f"Second loop took: {end - start}")
         self.corr_df = pd.DataFrame.from_dict(correlation)
