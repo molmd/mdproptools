@@ -169,7 +169,7 @@ class ResidenceTime:
                     a, tau, beta, corr_data["Time (ps)"].values
                 )
                 diff_int = np.trapz(corr_data[col].values - fit_data)
-                residence_time[col] = [self._integrate_sum_exp(a, tau, beta) + diff_int]
+                residence_time[col] = [a, tau, beta, self._integrate_sum_exp(a, tau, beta) + diff_int]
                 if plot:
                     fig, ax = plt.subplots(figsize=(8, 6))
                     set_axis(ax)
@@ -193,6 +193,7 @@ class ResidenceTime:
                     plt.close()
         print("Finished computing residence time")
         self.res_time_df = pd.DataFrame(residence_time)
+        self.res_time_df.index = ["a", "tau", "beta", "r (ps)"]
         self.res_time_df.to_csv(self.working_dir + "/residence_time.csv")
         return residence_time
 
