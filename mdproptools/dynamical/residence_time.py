@@ -37,8 +37,7 @@ def find_intersection(a, b):
     return res
 
 
-# TODO: COM - sanity checks (wrapped coords ...) - unique atom ids -
-#  begin and end time (ignore first ps in fitting)
+# TODO: COM - sanity checks (wrapped coords ...) - unique atom ids - unit conversion
 class ResidenceTime:
     def __init__(self, r_cut, partial_relations, filename, dt=1, working_dir=None):
         self.r_cut = r_cut
