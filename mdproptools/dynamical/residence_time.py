@@ -6,7 +6,6 @@ Calculates the residence time from LAMMPS trajectory files.
 
 import os
 import time
-import _pickle as pickle
 
 import numba as nb
 import numpy as np
@@ -126,7 +125,7 @@ class ResidenceTime:
                     )
                 cov_mat.append(cov_array)
                 del np_h_matrix
-            corr_array = np.sum(np.array(cov_mat), axis=0)/total_number_of_columns
+            corr_array = np.sum(np.array(cov_mat), axis=0) / total_number_of_columns
             del cov_mat
             corr_array = corr_array / corr_array[0]
             correlation[atom_pair] = corr_array
@@ -138,7 +137,9 @@ class ResidenceTime:
 
     def fit_auto_correlation(self, plot=True):
         residence_time = {}
-        corr_data = self.corr_df.head(int(len(self.corr_df)*0.5)) # take first half of the data
+        corr_data = self.corr_df.head(
+            int(len(self.corr_df) * 0.5)
+        )  # take first half of the data
         for col in corr_data:
             if col != "Time (ps)":
                 x = corr_data["Time (ps)"].values + 1
@@ -173,7 +174,12 @@ class ResidenceTime:
                     a, tau, beta, corr_data["Time (ps)"].values
                 )
                 diff_int = np.trapz(corr_data[col].values - fit_data)
-                residence_time[col] = [a, tau, beta, self._integrate_sum_exp(a, tau, beta) + diff_int]
+                residence_time[col] = [
+                    a,
+                    tau,
+                    beta,
+                    self._integrate_sum_exp(a, tau, beta) + diff_int,
+                ]
                 if plot:
                     fig, ax = plt.subplots(figsize=(8, 6))
                     set_axis(ax)
