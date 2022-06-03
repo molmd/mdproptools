@@ -6,6 +6,7 @@ Calculates the residence time from LAMMPS trajectory files.
 
 import os
 import time
+import _pickle as pickle
 
 import numba as nb
 import numpy as np
@@ -96,11 +97,11 @@ class ResidenceTime:
         for kl in range(0, len(self.relation_matrix)):
             k, l = self.relation_matrix[kl]
             atom_pair = f"{k}-{l}"
-            correlation[atom_pair] = [0] * cl
 
             h_matrix = h_matrix_dict.pop(atom_pair)
             number_of_time_steps = len(h_matrix)
             number_of_central_atoms = len(h_matrix[0])
+            total_number_of_columns = 0
             cov_mat = []
             for central_atom in range(number_of_central_atoms):
                 central_atom_h_matrix = [[i for i in j[central_atom]] for j in h_matrix]
@@ -116,14 +117,17 @@ class ResidenceTime:
                 )
                 for row in range(number_of_time_steps):
                     np_h_matrix[row, list(h_matrix[row][central_atom])] = True
+                total_number_of_columns += np_h_matrix.shape[1]
+                cov_array = np.zeros((number_of_time_steps,))
 
                 for column in range(np_h_matrix.shape[1]):
-                    cov_col = acovf(
+                    cov_array += acovf(
                         np_h_matrix[:, column], demean=False, unbiased=True, fft=True
                     )
-                    cov_mat.append(cov_col)
-            corr_matrix = np.array(cov_mat)
-            corr_array = np.mean(corr_matrix, axis=0)
+                cov_mat.append(cov_array)
+                del np_h_matrix
+            corr_array = np.sum(np.array(cov_mat), axis=0)/total_number_of_columns
+            del cov_mat
             corr_array = corr_array / corr_array[0]
             correlation[atom_pair] = corr_array
         end = time.time()
@@ -156,6 +160,7 @@ class ResidenceTime:
                 n_d = len(y_hat)
 
                 A = np.concatenate([np.ones((n_d, 1)), x_hat.reshape((n_d, 1))], axis=1)
+                # beta between 0 and 1
                 model = lsq_linear(A, y_hat, bounds=([-np.inf, -1], [np.inf, 0]))
                 beta = model.x[1] + 1
 
