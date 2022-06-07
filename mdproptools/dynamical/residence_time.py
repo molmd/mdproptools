@@ -135,10 +135,10 @@ class ResidenceTime:
         self.corr_df = pd.DataFrame.from_dict(correlation)
         self.corr_df.to_csv(self.working_dir + "/auto_correlation.csv")
 
-    def fit_auto_correlation(self, plot=True):
+    def fit_auto_correlation(self, cut_percent=0.5, plot=True):
         residence_time = {}
         corr_data = self.corr_df.head(
-            int(len(self.corr_df) * 0.5)
+            int(len(self.corr_df) * cut_percent)
         )  # take first half of the data
         for col in corr_data:
             if col != "Time (ps)":
