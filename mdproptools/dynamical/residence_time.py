@@ -13,7 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from scipy.special import gamma
-from scipy.optimize import lsq_linear
+from scipy.optimize import curve_fit
 from statsmodels.tsa.stattools import acovf
 
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
@@ -50,15 +50,16 @@ class ResidenceTime:
         self.working_dir = working_dir or os.getcwd()
 
     @staticmethod
-    def _stretched_exp_function(a, tau, beta, x):
-        return a * np.exp(-((x / tau) ** beta))
+    def _stretched_exp_function(x, tau, beta):
+        return np.exp(1 - (1 + x / tau) ** beta)
 
     @staticmethod
-    def _integrate_sum_exp(a, tau, beta):
-        return a * tau * gamma(1 + 1 / beta)
+    def _integrate_sum_exp(tau, beta):
+        return np.exp(1) * tau * gamma(1 + 1 / beta)
 
     def calc_auto_correlation(self):
-        sum_h_init = {}
+        num_of_atom_pair_atoms = {}
+        id_list = None
         h_matrix_dict = {}
         correlation = {"Time (ps)": []}
 
@@ -142,43 +143,17 @@ class ResidenceTime:
         )  # take first half of the data
         for col in corr_data:
             if col != "Time (ps)":
-                x = corr_data["Time (ps)"].values + 1
+                x = corr_data["Time (ps)"].values
                 y = corr_data[col].values
-                y = np.array(
-                    [j + (1e-16 * (len(y) - i) / len(y)) for i, j in enumerate(y)]
-                )
-                valid_y = y > 0
-                x = x[valid_y]
-                y = y[valid_y]
-                n = len(y)
 
-                log_y = np.log(y)
-                log_y_prime = np.gradient(log_y)
+                popt, _ = curve_fit(self._stretched_exp_function, x, y,
+                                    bounds=([0, 0.1], [np.inf, 1]))
+                tau, beta = popt
 
-                negative_log_y_prime = log_y_prime < 0
-                y_hat = np.log(-log_y_prime[negative_log_y_prime])
-                x_hat = np.log(x[negative_log_y_prime])
-                n_d = len(y_hat)
-
-                A = np.concatenate([np.ones((n_d, 1)), x_hat.reshape((n_d, 1))], axis=1)
-                # beta between 0 and 1
-                model = lsq_linear(A, y_hat, bounds=([-np.inf, -1], [np.inf, 0]))
-                beta = model.x[1] + 1
-
-                A = np.concatenate([np.ones((n, 1)), x.reshape((n, 1)) ** beta], axis=1)
-                model = lsq_linear(A, log_y)
-                a = np.exp(model.x[0])
-                tau = (-1 / model.x[1]) ** (1 / beta)
-
-                fit_data = self._stretched_exp_function(
-                    a, tau, beta, corr_data["Time (ps)"].values
-                )
-                diff_int = np.trapz(corr_data[col].values - fit_data)
                 residence_time[col] = [
-                    a,
                     tau,
                     beta,
-                    self._integrate_sum_exp(a, tau, beta) + diff_int,
+                    self._integrate_sum_exp(tau, beta),
                 ]
                 if plot:
                     fig, ax = plt.subplots(figsize=(8, 6))
@@ -188,6 +163,9 @@ class ResidenceTime:
                         corr_data[col],
                         color="red",
                         label="original",
+                    )
+                    fit_data = self._stretched_exp_function(
+                        corr_data["Time (ps)"].values, tau, beta
                     )
                     ax.plot(
                         corr_data["Time (ps)"], fit_data, color="black", label="fit"
@@ -203,7 +181,7 @@ class ResidenceTime:
                     plt.close()
         print("Finished computing residence time")
         self.res_time_df = pd.DataFrame(residence_time)
-        self.res_time_df.index = ["a", "tau", "beta", "r (ps)"]
+        self.res_time_df.index = ["tau", "beta", "r (ps)"]
         self.res_time_df.to_csv(self.working_dir + "/residence_time.csv")
         return residence_time
 
