@@ -81,6 +81,8 @@ class ResidenceTime:
                 self.atom_pairs.append(atom_pair)
                 k_data = full_df[full_df["type"] == k].drop("type", axis=1).values
                 l_data = full_df[full_df["type"] == l].drop("type", axis=1).values
+                if atom_pair not in num_of_atom_pair_atoms:
+                    num_of_atom_pair_atoms[atom_pair] = len(l_data)
 
                 h_matrix = []
                 for idx, k_row in enumerate(k_data):
@@ -108,14 +110,10 @@ class ResidenceTime:
             total_number_of_columns = 0
             cov_mat = []
             for central_atom in range(number_of_central_atoms):
-                central_atom_h_matrix = [[i for i in j[central_atom]] for j in h_matrix]
-                max_cols = [max(i) for i in central_atom_h_matrix if i]
-                if not max_cols:
-                    continue
                 np_h_matrix = np.zeros(
                     (
                         len(h_matrix),
-                        max([max(i) for i in central_atom_h_matrix if i]) + 1,
+                        num_of_atom_pair_atoms[atom_pair],
                     ),
                     dtype="bool",
                 )
