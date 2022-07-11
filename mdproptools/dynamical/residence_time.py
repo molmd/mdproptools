@@ -50,11 +50,11 @@ class ResidenceTime:
 
     @staticmethod
     def _stretched_exp_function(x, a, tau_res, tau_short, beta):
-        return a* np.exp(-(x/tau_res)** beta) + (1-a) * np.exp(-x / tau_short)
+        return a * np.exp(-((x / tau_res) ** beta)) + (1 - a) * np.exp(-x / tau_short)
 
     @staticmethod
     def _integrate_sum_exp(a, tau_res, tau_short, beta):
-        return ((a* tau_res * gamma(1 + 1 / beta)) + (1-a)*tau_short)
+        return (a * tau_res * gamma(1 + 1 / beta)) + (1 - a) * tau_short
 
     def calc_auto_correlation(self):
         num_of_atom_pair_atoms = {}
@@ -145,16 +145,20 @@ class ResidenceTime:
                 y = corr_data[col].values
 
                 popt, _ = curve_fit(
-                    self._stretched_exp_function, x, y, bounds=([0, 0, 0, 0.1], [np.inf, np.inf, np.inf, 1]))
+                    self._stretched_exp_function,
+                    x,
+                    y,
+                    bounds=([0, 0, 0, 0.1], [np.inf, np.inf, np.inf, 1]),
+                )
                 a, tau_res, tau_short, beta = popt
 
                 residence_time[col] = [
-            a,
-            tau_res,
-            tau_short,
-            beta,
-            _integrate_sum_exp(a, tau_res, tau_short, beta),
-        ]
+                    a,
+                    tau_res,
+                    tau_short,
+                    beta,
+                    _integrate_sum_exp(a, tau_res, tau_short, beta),
+                ]
                 if plot:
                     fig, ax = plt.subplots(figsize=(8, 6))
                     set_axis(ax)
@@ -165,7 +169,11 @@ class ResidenceTime:
                         label="original",
                     )
                     fit_data = self._stretched_exp_function(
-                        corr_data["Time (ps)"].values, a, tau_res, tau_short, beta,
+                        corr_data["Time (ps)"].values,
+                        a,
+                        tau_res,
+                        tau_short,
+                        beta,
                     )
                     ax.plot(
                         corr_data["Time (ps)"], fit_data, color="black", label="fit"
