@@ -66,11 +66,15 @@ class ResidenceTime:
         start = time.time()
         for ind, dump in enumerate(self.dumps):
             print("Processing frame number: {}".format(ind))
+            # dump.data = dump.data.sort_values(by=["id"])
             correlation["Time (ps)"].append(dump.timestep * self.dt)
 
             lx, ly, lz = dump.box.to_lattice().lengths
-            full_df = dump.data[["type", "x", "y", "z"]]
-
+            # full_df = dump.data[["type", "x", "y", "z"]]
+            full_df = dump.data[["id", "type", "x", "y", "z"]]
+            if ind == 0:
+                id_list = full_df['id'].to_list()
+            full_df = full_df.set_index('id').reindex(id_list)
             for kl in range(0, len(self.relation_matrix)):
                 k, l = self.relation_matrix[kl]
                 atom_pair = f"{k}-{l}"
