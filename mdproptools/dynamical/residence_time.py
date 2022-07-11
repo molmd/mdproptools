@@ -49,12 +49,12 @@ class ResidenceTime:
         self.working_dir = working_dir or os.getcwd()
 
     @staticmethod
-    def _stretched_exp_function(x, tau, beta):
-        return np.exp(1 - (1 + x / tau) ** beta)
+    def _stretched_exp_function(x, a, tau_res, tau_short, beta):
+        return a* np.exp(-(x/tau_res)** beta) + (1-a) * np.exp(-x / tau_short)
 
     @staticmethod
-    def _integrate_sum_exp(tau, beta):
-        return np.exp(1) * tau * gamma(1 + 1 / beta)
+    def _integrate_sum_exp(a, tau_res, tau_short, beta):
+        return ((a* tau_res * gamma(1 + 1 / beta)) + (1-a)*tau_short)
 
     def calc_auto_correlation(self):
         num_of_atom_pair_atoms = {}
@@ -134,7 +134,7 @@ class ResidenceTime:
         self.corr_df = pd.DataFrame.from_dict(correlation)
         self.corr_df.to_csv(self.working_dir + "/auto_correlation.csv")
 
-    def fit_auto_correlation(self, cut_percent=0.5, plot=True):
+    def fit_auto_correlation(self, cut_percent=0.9, plot=True):
         residence_time = {}
         corr_data = self.corr_df.head(
             int(len(self.corr_df) * cut_percent)
@@ -145,15 +145,16 @@ class ResidenceTime:
                 y = corr_data[col].values
 
                 popt, _ = curve_fit(
-                    self._stretched_exp_function, x, y, bounds=([0, 0.1], [np.inf, 1])
-                )
-                tau, beta = popt
+                    self._stretched_exp_function, x, y, bounds=([0, 0, 0, 0.1], [np.inf, np.inf, np.inf, 1]))
+                a, tau_res, tau_short, beta = popt
 
                 residence_time[col] = [
-                    tau,
-                    beta,
-                    self._integrate_sum_exp(tau, beta),
-                ]
+            a,
+            tau_res,
+            tau_short,
+            beta,
+            _integrate_sum_exp(a, tau_res, tau_short, beta),
+        ]
                 if plot:
                     fig, ax = plt.subplots(figsize=(8, 6))
                     set_axis(ax)
@@ -164,7 +165,7 @@ class ResidenceTime:
                         label="original",
                     )
                     fit_data = self._stretched_exp_function(
-                        corr_data["Time (ps)"].values, tau, beta
+                        corr_data["Time (ps)"].values, a, tau_res, tau_short, beta,
                     )
                     ax.plot(
                         corr_data["Time (ps)"], fit_data, color="black", label="fit"
@@ -180,7 +181,7 @@ class ResidenceTime:
                     plt.close()
         print("Finished computing residence time")
         self.res_time_df = pd.DataFrame(residence_time)
-        self.res_time_df.index = ["tau", "beta", "r (ps)"]
+        self.res_time_df.index = ["a", "tau_res", "tau_short", "beta", "r (ps)"]
         self.res_time_df.to_csv(self.working_dir + "/residence_time.csv")
         return residence_time
 
