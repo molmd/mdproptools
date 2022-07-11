@@ -154,7 +154,7 @@ class ResidenceTime:
                     tau_res,
                     tau_short,
                     beta,
-                    _integrate_sum_exp(a, tau_res, tau_short, beta),
+                    self._integrate_sum_exp(a, tau_res, tau_short, beta),
                 ]
                 if plot:
                     fig, ax = plt.subplots(figsize=(8, 6))
