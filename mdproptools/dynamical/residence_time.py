@@ -4,8 +4,7 @@
 Calculates the residence time from LAMMPS trajectory files.
 """
 
-import os
-import time
+import os, time
 
 import numba as nb
 import numpy as np
@@ -44,7 +43,7 @@ class ResidenceTime:
         self.relation_matrix = np.asarray(partial_relations).transpose()
         self.atom_pairs = []
         self.dumps = parse_lammps_dumps(filename)
-        self.dt = dt * 10 ** -3  # input dt in fs - convert to ps
+        self.dt = dt * 10**-3  # input dt in fs - convert to ps
         self.corr_df = None
         self.res_time_df = None
         self.working_dir = working_dir or os.getcwd()
@@ -73,8 +72,8 @@ class ResidenceTime:
             # full_df = dump.data[["type", "x", "y", "z"]]
             full_df = dump.data[["id", "type", "x", "y", "z"]]
             if ind == 0:
-                id_list = full_df['id'].to_list()
-            full_df = full_df.set_index('id').reindex(id_list)
+                id_list = full_df["id"].to_list()
+            full_df = full_df.set_index("id").reindex(id_list)
             for kl in range(0, len(self.relation_matrix)):
                 k, l = self.relation_matrix[kl]
                 atom_pair = f"{k}-{l}"
@@ -95,9 +94,6 @@ class ResidenceTime:
                 h_matrix_dict[atom_pair] = h_matrix_dict.get(atom_pair, []) + [h_matrix]
         end = time.time()
         print(f"First loop took: {end - start}")
-
-        cl = int(len(correlation["Time (ps)"]) / 2)
-        correlation["Time (ps)"] = correlation["Time (ps)"]
 
         start = time.time()
         for kl in range(0, len(self.relation_matrix)):
@@ -142,14 +138,15 @@ class ResidenceTime:
         residence_time = {}
         corr_data = self.corr_df.head(
             int(len(self.corr_df) * cut_percent)
-        )  # take first half of the data
+        )  # take first part of the data
         for col in corr_data:
             if col != "Time (ps)":
                 x = corr_data["Time (ps)"].values
                 y = corr_data[col].values
 
-                popt, _ = curve_fit(self._stretched_exp_function, x, y,
-                                    bounds=([0, 0.1], [np.inf, 1]))
+                popt, _ = curve_fit(
+                    self._stretched_exp_function, x, y, bounds=([0, 0.1], [np.inf, 1])
+                )
                 tau, beta = popt
 
                 residence_time[col] = [
@@ -201,7 +198,7 @@ class Displacement:
         self.atom_types = atom_types
         self.residence_time = residence_time
         self.dumps = list(parse_lammps_dumps(filename))
-        self.dt = dt * 10 ** -3  # input dt in fs
+        self.dt = dt * 10**-3  # input dt in fs
         self.save_mode = save_mode
         self.working_dir = working_dir or os.getcwd()
 
