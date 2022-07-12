@@ -146,6 +146,7 @@ class ResidenceTime:
                     x,
                     y,
                     bounds=([0, 0, 0, 0.1], [np.inf, np.inf, np.inf, 1]),
+                    maxfev=5000,
                 )
                 a, tau_res, tau_short, beta = popt
 
