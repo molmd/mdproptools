@@ -38,7 +38,16 @@ def find_intersection(a, b):
 
 # TODO: COM - sanity checks (wrapped coords ...) - unique atom ids - unit conversion
 class ResidenceTime:
-    def __init__(self, r_cut, partial_relations, filename, dt=1, num_mols=None, num_atoms_per_mol=None, working_dir=None):
+    def __init__(
+        self,
+        r_cut,
+        partial_relations,
+        filename,
+        dt=1,
+        num_mols=None,
+        num_atoms_per_mol=None,
+        working_dir=None,
+    ):
         self.r_cut = r_cut
         self.relation_matrix = np.asarray(partial_relations).transpose()
         self.atom_pairs = []
@@ -60,7 +69,6 @@ class ResidenceTime:
 
     def calc_auto_correlation(self):
         num_of_atom_pair_atoms = {}
-        id_list = None
         h_matrix_dict = {}
         correlation = {"Time (ps)": []}
 
@@ -72,12 +80,13 @@ class ResidenceTime:
             full_df = dump.data[["id", "type", "x", "y", "z"]]
             full_df = full_df.sort_values("id")
             if self.num_mols and self.num_atoms_per_mol:
-                data = _calc_atom_type(full_df.values, self.num_mols, self.num_atoms_per_mol)
-                full_df = pd.DataFrame(data, columns=["type", "original_type", "x", "y", "z"])
+                data = _calc_atom_type(
+                    full_df.values, self.num_mols, self.num_atoms_per_mol
+                )
+                full_df = pd.DataFrame(
+                    data, columns=["type", "original_type", "x", "y", "z"]
+                )
                 full_df = full_df[["type", "x", "y", "z"]]
-            # if ind == 0:
-            #     id_list = full_df["id"].to_list()
-            # full_df = full_df.set_index("id").reindex(id_list)
             for kl in range(0, len(self.relation_matrix)):
                 k, l = self.relation_matrix[kl]
                 atom_pair = f"{k}-{l}"
