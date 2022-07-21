@@ -18,7 +18,7 @@ from statsmodels.tsa.stattools import acovf
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
 
 from mdproptools.utilities.plots import set_axis
-from mdproptools.structural.rdf_cn import _calc_rsq
+from mdproptools.structural.rdf_cn import _calc_rsq, _calc_atom_type
 
 __author__ = "Rasha Atwi"
 __maintainer__ = "Rasha Atwi"
@@ -38,7 +38,7 @@ def find_intersection(a, b):
 
 # TODO: COM - sanity checks (wrapped coords ...) - unique atom ids - unit conversion
 class ResidenceTime:
-    def __init__(self, r_cut, partial_relations, filename, dt=1, working_dir=None):
+    def __init__(self, r_cut, partial_relations, filename, dt=1, num_mols=None, num_atoms_per_mol=None, working_dir=None):
         self.r_cut = r_cut
         self.relation_matrix = np.asarray(partial_relations).transpose()
         self.atom_pairs = []
@@ -46,6 +46,8 @@ class ResidenceTime:
         self.dt = dt * 10**-3  # input dt in fs - convert to ps
         self.corr_df = None
         self.res_time_df = None
+        self.num_mols = num_mols
+        self.num_atoms_per_mol = num_atoms_per_mol
         self.working_dir = working_dir or os.getcwd()
 
     @staticmethod
@@ -68,9 +70,14 @@ class ResidenceTime:
             correlation["Time (ps)"].append(dump.timestep * self.dt)
             lx, ly, lz = dump.box.to_lattice().lengths
             full_df = dump.data[["id", "type", "x", "y", "z"]]
-            if ind == 0:
-                id_list = full_df["id"].to_list()
-            full_df = full_df.set_index("id").reindex(id_list)
+            full_df = full_df.sort_values("id")
+            if self.num_mols and self.num_atoms_per_mol:
+                data = _calc_atom_type(full_df.values, self.num_mols, self.num_atoms_per_mol)
+                full_df = pd.DataFrame(data, columns=["type", "original_type", "x", "y", "z"])
+                full_df = full_df[["type", "x", "y", "z"]]
+            # if ind == 0:
+            #     id_list = full_df["id"].to_list()
+            # full_df = full_df.set_index("id").reindex(id_list)
             for kl in range(0, len(self.relation_matrix)):
                 k, l = self.relation_matrix[kl]
                 atom_pair = f"{k}-{l}"
