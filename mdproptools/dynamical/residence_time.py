@@ -36,7 +36,7 @@ def find_intersection(a, b):
     return res
 
 
-# TODO: COM - sanity checks (wrapped coords ...) - unique atom ids - unit conversion
+# TODO: sanity checks (wrapped coords ...) - COM calculation - unit conversion
 class ResidenceTime:
     def __init__(
         self,
