@@ -316,7 +316,7 @@ class Viscosity:
             time_data = self.time * self.step_to_s * 10 ** 9
 
             paired = plt.get_cmap("Paired")
-            colors = iter(paired(np.linspace(0, 1, 50)))
+            colors = iter(paired(np.linspace(0, 1, len(visc_avg))))
 
             fig, ax = plt.subplots(1, 3, figsize=[20, 5], sharey=False)
             ax1 = ax[0]
