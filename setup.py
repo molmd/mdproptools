@@ -20,7 +20,8 @@ setuptools.setup(
                       "seaborn >= 0.11.0",
                       "statsmodels >= 0.12.0",
                       "numba == 0.53.1",
-                      "llvmlite == 0.36.0"
+                      "llvmlite == 0.36.0",
+                      "doepy",
                       ],
     packages=setuptools.find_packages(),
     classifiers=[
