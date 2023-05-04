@@ -20,7 +20,7 @@ setuptools.setup(
                       "seaborn >= 0.11.0",
                       "statsmodels >= 0.12.0",
                       "numba == 0.56.4",
-                      "llvmlite == 0.40.0",
+                      "llvmlite == 0.39.0dev0",
                       "doepy >= 0.0.1",
                       ],
     packages=setuptools.find_packages(),
