@@ -19,9 +19,9 @@ setuptools.setup(
                       "pandas >= 1.1.2",
                       "seaborn >= 0.11.0",
                       "statsmodels >= 0.12.0",
-                      "numba == 0.53.1",
+                      "numba >= 0.56.4",
                       "llvmlite == 0.36.0",
-                      "doepy",
+                      "doepy >= 0.0.1",
                       ],
     packages=setuptools.find_packages(),
     classifiers=[
