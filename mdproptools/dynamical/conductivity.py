@@ -5,6 +5,7 @@ Calculates the ionic conductivity from LAMMPS trajectory files.
 """
 
 import os
+import glob
 
 from multiprocessing import Pool, cpu_count
 
@@ -53,6 +54,7 @@ class Conductivity:
         filename,
         num_mols,
         num_atoms_per_mol,
+        volume,
         mass=None,
         temp=298.15,
         timestep=1,
@@ -68,6 +70,7 @@ class Conductivity:
                 be consistent with PackmolRunner input
             num_atoms_per_mol (list): Number of atoms in each molecule type; order is
                 similar to that in num_mols
+            volume (float): Volume of the simulation box in the same units specified as input
             mass (list): Mass of unique atom types in a LAMMPS dump file; should be in
                 the same order as in the LAMMPS data file and in the same units
                 specified as input, e.g. if the "real" units are used, the masses
@@ -81,15 +84,13 @@ class Conductivity:
             working_dir (str): Path of the LAMMPS dump files
         """
         self.working_dir = working_dir or os.getcwd()
-        self.dumps = list(parse_lammps_dumps(f"{self.working_dir}/{filename}"))
+        self.filename = filename
+        self.dumps = parse_lammps_dumps(f"{self.working_dir}/{self.filename}")
         self.mass = mass
         self.num_mols = num_mols
         self.num_atoms_per_mol = num_atoms_per_mol
         self.units = units
-        box_lengths = self.dumps[0].box.to_lattice().lengths
-        self.volume = (
-            np.prod(box_lengths) * constants.DISTANCE_CONVERSION[self.units] ** 3
-        )  # volume in m^3
+        self.volume = volume * constants.DISTANCE_CONVERSION[self.units] ** 3  # volume in m^3
         self.temp = temp
         self.timestep = timestep
         self.time = []  # time data used to calculate GK integral
@@ -173,7 +174,7 @@ class Conductivity:
             j (array-like): Charge fluxes of shape (3, # molecule types, # time steps)
         """
         inputs = []
-        j = np.zeros((3, len(self.num_mols), len(self.dumps)))
+        j = np.zeros((3, len(self.num_mols), len(glob.glob(f"{self.working_dir}/{self.filename}"))))
         for ind, dump in enumerate(self.dumps):
             inputs.append(
                 (
