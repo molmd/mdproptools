@@ -12,7 +12,7 @@
 MDPropTools is a Python package for computing structural and dynamical properties from 
 LAMMPS trajectory and output files. 
 
-- **Source:** https://github.com/tufts-university-rajput-lab/mdproptools
+- **Source:** https://github.com/molmd/mdproptools
 
 # Installation
 
