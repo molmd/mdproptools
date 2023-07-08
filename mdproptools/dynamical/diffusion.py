@@ -289,6 +289,7 @@ class Diffusion:
     ):
         delta = dump_freq * self.timestep * constants.TIME_CONVERSION[self.units]
         msd_int["diff"] = msd_int["msd"] / (2 * dimension * tao_coeff * delta)
+        msd_int.to_csv(f"{self.diff_dir}/msd_int.csv")
         if plot:
             paired = plt.get_cmap("Paired")
             colors = iter(paired(np.linspace(0, 1, 10)))
