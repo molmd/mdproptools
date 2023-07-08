@@ -94,7 +94,7 @@ class Diffusion:
         com_drift=False,
         avg_interval=False,
     ):
-        dumps = list(parse_lammps_dumps(f"{self.outputs_dir}/{filename}"))
+        dumps = parse_lammps_dumps(f"{self.outputs_dir}/{filename}")
         msd_dfs = []
         for dump in dumps:
             assert "id" in dump.data.columns, "Missing atom id's in dump file."
