@@ -31,9 +31,7 @@ __version__ = "0.0.1"
 
 
 class Diffusion:
-    def __init__(
-        self, timestep=1, units="real", outputs_dir=None, diff_dir=None 
-    ):
+    def __init__(self, timestep=1, units="real", outputs_dir=None, diff_dir=None):
         self.units = units
         if self.units not in constants.SUPPORTED_UNITS:
             raise KeyError(
@@ -226,7 +224,9 @@ class Diffusion:
                     f.write(str(model.summary()))
         ind = diff_names or [i + 1 for i in range(len(msd_col_names))]
         diffusion = pd.DataFrame(
-            diff, columns=["diffusion (m2/s)", "std", "R2"], index=ind,
+            diff,
+            columns=["diffusion (m2/s)", "std", "R2"],
+            index=ind,
         )
 
         if plot:
@@ -236,7 +236,7 @@ class Diffusion:
             nrows = int(np.ceil(len(msd_col_names) / ncols))
             fig, axes = plt.subplots(nrows, ncols, figsize=(12, 8))
             fig_log, axes_log = plt.subplots(nrows, ncols, figsize=(12, 8))
-            time_data = msd["Time (s)"] * 10 ** 9
+            time_data = msd["Time (s)"] * 10**9
             for i, (ax, ax_log, col) in enumerate(
                 zip(axes.flatten(), axes_log.flatten(), msd_col_names)
             ):
@@ -246,14 +246,22 @@ class Diffusion:
                 # normal plot
                 pred = models[i].predict()
                 ax.plot(
-                    time_data, msd[col], color=color, linewidth=2, label=ind[i],
+                    time_data,
+                    msd[col],
+                    color=color,
+                    linewidth=2,
+                    label=ind[i],
                 )
                 ax.plot(time_data, pred, color="k", ls="--", linewidth=2)
                 ax.locator_params(axis="y", nbins=6)
                 # log plot
                 st_line = 10 ** (np.log10(msd[col].max()) - np.log10(time_data.max()))
                 ax_log.plot(
-                    time_data, msd[col], color=color, linewidth=2, label=ind[i],
+                    time_data,
+                    msd[col],
+                    color=color,
+                    linewidth=2,
+                    label=ind[i],
                 )
                 ax_log.plot(
                     time_data, time_data * st_line, color="k", ls="--", linewidth=2
@@ -263,7 +271,8 @@ class Diffusion:
                 for axis in [ax, ax_log]:
                     set_axis(axis, axis="both")
                     axis.legend(
-                        fontsize=16, frameon=False,
+                        fontsize=16,
+                        frameon=False,
                     )
                     axis.set_xlabel(r"$\mathrm{Time, 10^9 (s)}$", fontsize=18)
                     axis.set_ylabel(r"$\mathrm{MSD\ (m^2)}$", fontsize=18)
@@ -277,7 +286,9 @@ class Diffusion:
                     figure.delaxes(ax=axis.flatten()[-1])
                 figure.tight_layout()
                 figure.savefig(
-                    f"{self.diff_dir}/{name}", bbox_inches="tight", pad_inches=0.1,
+                    f"{self.diff_dir}/{name}",
+                    bbox_inches="tight",
+                    pad_inches=0.1,
                 )
 
         diffusion.to_csv(f"{self.diff_dir}/diffusion.csv")
@@ -304,7 +315,7 @@ class Diffusion:
                     color = next(colors)
                     set_axis(ax, axis="both")
                     sns.histplot(
-                        grp["diff"] * 10 ** 9,
+                        grp["diff"] * 10**9,
                         bins="sqrt",
                         color=color,
                         edgecolor="k",
@@ -314,13 +325,15 @@ class Diffusion:
                         ax=ax,
                     )
                     ax.legend(
-                        fontsize=16, frameon=False,
+                        fontsize=16,
+                        frameon=False,
                     )
                     ax.set_xlabel(
                         r"$\mathrm{Diffusivity, 10^{-9}\ (m^2/s)}$", fontsize=18
                     )
                     ax.set_ylabel(
-                        "Frequency", fontsize=18,
+                        "Frequency",
+                        fontsize=18,
                     )
                     ax.xaxis.get_major_ticks()[1].label1.set_visible(False)
                     ax.xaxis.set_major_formatter(ScalarFormatter())
@@ -341,7 +354,7 @@ class Diffusion:
                 fig, ax = plt.subplots(figsize=(8, 6))
                 set_axis(ax, axis="both")
                 sns.histplot(
-                    msd_int["diff"] * 10 ** 9,
+                    msd_int["diff"] * 10**9,
                     bins="sqrt",
                     color=next(colors),
                     edgecolor="k",
@@ -351,7 +364,8 @@ class Diffusion:
                 )
                 ax.set_xlabel(r"$\mathrm{Diffusivity, 10^{-9}\ (m^2/s)}$", fontsize=18)
                 ax.set_ylabel(
-                    "Frequency", fontsize=18,
+                    "Frequency",
+                    fontsize=18,
                 )
                 ax.xaxis.get_major_ticks()[1].label1.set_visible(False)
                 ax.xaxis.set_major_formatter(ScalarFormatter())
