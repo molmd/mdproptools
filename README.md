@@ -21,7 +21,7 @@ pip install mdproptools
 ````
 Or by cloning the repository and running the setup script:
 ````
-git clone hhttps://github.com/molmd/mdproptools.git
+git clone https://github.com/molmd/mdproptools.git
 cd mdproptools
 python setup.py install
 ````
