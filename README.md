@@ -15,7 +15,19 @@ LAMMPS trajectory and output files.
 - **Source:** https://github.com/molmd/mdproptools
 
 # Installation
-
-# Requirements
+MDPropTools can be installed using pip:
+````
+pip install mdproptools
+````
+Or by cloning the repository and running the setup script:
+````
+git clone hhttps://github.com/molmd/mdproptools.git
+cd mdproptools
+python setup.py install
+````
 
 # Usage 
+
+# Citation 
+If you use MDPropTools in your research, please cite the following paper:
+- Atwi, R., Bliss, M., Makeev, M., & Rajput, N. N. (2022). [MISPR: An automated infrastructure for high-throughput DFT and MD simulations](https://www.nature.com/articles/s41598-022-20009-w). Scientific Reports, 12(1), 1-16.
