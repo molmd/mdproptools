@@ -27,7 +27,7 @@ __maintainer__ = "Rasha Atwi"
 __email__ = "rasha.atwi@stonybrook.edu"
 __status__ = "Development"
 __date__ = "Apr 2020"
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 FORCE_CONSTANT = 0.043363 / 16.0
 
