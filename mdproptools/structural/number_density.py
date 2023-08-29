@@ -51,7 +51,7 @@ def calc_number_density(
         )
     )
     dumps, num_bins, radii, num_files, num_relations = _initialize(
-        dist_from_interface,
+        abs(dist_from_interface),
         bin_size,
         os.path.join(working_dir, dump_pattern),
         partial_relations,
@@ -84,15 +84,25 @@ def calc_number_density(
         ref_df[axis_norm_interface] -= min_dist
         st = time()
         # Calculate density profiles of the input atom types
-        for i, j in enumerate(atom_types):
-            b = ref_df[
-                (ref_df[atom_types_col] == j)
-                & (ref_df[axis_norm_interface] < dist_from_interface)
-            ][axis_norm_interface].values
-            b -= dist_range
-            current_bin = (b / bin_size).astype(int)
-            for k in current_bin:
-                rho_part[i][k] += 1
+        if dist_from_interface > 0:
+            for i, j in enumerate(atom_types):
+                b = ref_df[
+                    (ref_df[atom_types_col] == j)
+                    & (ref_df[axis_norm_interface] < dist_from_interface)
+                ][axis_norm_interface].values
+                b -= dist_range
+                current_bin = (b / bin_size).astype(int)
+                for k in current_bin:
+                    rho_part[i][k] += 1
+        else:
+            for i, j in enumerate(atom_types):
+                b = ref_df[
+                    (ref_df[atom_types_col] == j)
+                    & (ref_df[axis_norm_interface] > dist_from_interface)
+                ][axis_norm_interface].values
+                current_bin = (b / bin_size).astype(int)
+                for k in current_bin:
+                    rho_part[i][k] += 1
         print("time:", time() - st)
         print("Finished computing density profile for timestep", dump.timestep)
 
