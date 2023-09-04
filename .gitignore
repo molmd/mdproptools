@@ -4,3 +4,6 @@
 *.pyc
 *.DS_Store
 *.__pychache__
+build/*
+dist/*
+*.egg-info/*
