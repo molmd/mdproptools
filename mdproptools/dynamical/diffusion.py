@@ -165,7 +165,7 @@ class Diffusion:
         if len(log_files) > 1:
             pattern = r"%s" % log_pattern.replace("*", "([0-9]+)")
             pattern = ".*" + pattern.replace("\\", "\\\\")
-            log_files = sorted(files, key=lambda f: int(re.match(pattern, f).group(1)))
+            log_files = sorted(log_files, key=lambda f: int(re.match(pattern, f).group(1)))
         list_log_df = []
         for file in log_files:
             log_df = parse_lammps_log(file)
