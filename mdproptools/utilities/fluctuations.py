@@ -19,6 +19,26 @@ def _get_stats(stats):
 def plot_fluctuations(
     log, log_prop, title, filename, timestep=1, units="real", working_dir=None
 ):
+    """
+    Plot fluctuations of a specified property from a LAMMPS log file over time and
+    print the mean and standard deviation of the property to the console.
+
+    Args:
+        log (DataFrame): Pandas DataFrame containing the log data.
+        log_prop (str): The property within the log to plot. Should match the property
+            name in the log.
+        title (str): The title of the plot.
+        filename (str): Name of the file to save the plot to.
+        timestep (float, optional): Timestep used in the simulations in the same units
+            specified as input; defaults to 1 fs when real units are used.
+        units (str, optional): Units used in the LAMMMPS simulations; used to convert to
+            SI units; defaults to real unit.
+        working_dir (str, optional): The working directory to save the plot in.
+            If None, the current working directory is used; defaults to None.
+
+    Returns:
+        None
+    """
     working_dir = working_dir or os.getcwd()
     fig, ax = plt.subplots(figsize=(8, 6), sharey=False)
     set_axis(ax, axis="both")
