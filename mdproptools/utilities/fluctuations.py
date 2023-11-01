@@ -1,18 +1,8 @@
 import os
-import re
-import glob
 
 import numpy as np
-import pandas as pd
 import seaborn as sns
-import statsmodels.api as sm
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-
-from scipy import optimize, integrate
-from matplotlib.ticker import ScalarFormatter
-
-from pymatgen.io.lammps.outputs import parse_lammps_log
 
 from mdproptools.common import constants
 from mdproptools.utilities.plots import set_axis
@@ -32,7 +22,7 @@ def plot_fluctuations(
     working_dir = working_dir or os.getcwd()
     fig, ax = plt.subplots(figsize=(8, 6), sharey=False)
     set_axis(ax, axis="both")
-    time_data = log["Step"] * timestep * constants.TIME_CONVERSION[units] * 10 ** 9
+    time_data = log["Step"] * timestep * constants.TIME_CONVERSION[units] * 10**9
     stats = log[log_prop].describe().loc[["mean", "std"]].to_dict()
     print("{}: mean = {}, std = {}".format(log_prop, stats["mean"], stats["std"]))
     ax.plot(time_data, log[log_prop], linewidth=2, color="red")
