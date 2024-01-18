@@ -17,7 +17,6 @@ import pandas as pd
 
 from pymatgen.core.structure import Molecule
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
-from pymatgen.core.periodic_table import _pt_data
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from mdproptools.structural.rdf_cn import _calc_rsq, _calc_atom_type
