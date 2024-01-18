@@ -51,6 +51,8 @@ def get_clusters(
     filename,
     atom_type,
     r_cut,
+    num_mols,
+    num_atoms_per_mol,
     full_trajectory=False,
     frame=None,
     num_mols=None,
