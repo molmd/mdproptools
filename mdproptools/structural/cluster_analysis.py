@@ -63,7 +63,9 @@ def get_clusters(
     """
     Extracts clusters within a cutoff distance from an atom from LAMMPS trajectory files
     and saves them as *.xyz files in the working directory. The LAMMPS dump files
-    should contain the following attributes: id, type, x, y, z, fx, fy, fz.
+    should contain the following attributes: id, type, x, y, z, fx, fy, fz. Additionally,
+    the elements of the atoms in the system should be provided if they are not in the
+    dump files.
 
     Args:
         filename (str or file handle): the name of the LAMMPS dump file; can be
