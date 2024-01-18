@@ -339,27 +339,3 @@ def get_unique_configurations(
         shutil.rmtree(clusters_dir)
     return df, df1
 
-
-def group_clusters(cluster_pattern, tolerance=0.1, working_dir=None):
-    if not working_dir:
-        working_dir = os.getcwd()
-    mm = MoleculeMatcher(tolerance=tolerance)
-    filename_list = glob.glob((os.path.join(working_dir, cluster_pattern)))
-    mol_list = [Molecule.from_file(os.path.join(working_dir, f)) for f in filename_list]
-    mol_groups = mm.group_molecules(mol_list)
-    filename_groups = [
-        [filename_list[mol_list.index(m)] for m in g] for g in mol_groups
-    ]
-    for p, i in enumerate(filename_groups):
-        if p + 1 < 10:
-            conf_num = "0{}".format(p + 1)
-        else:
-            conf_num = p + 1
-        folder_name = "Configuration_{}".format(conf_num)
-        if not os.path.exists(folder_name):
-            os.mkdir((os.path.join(working_dir, folder_name)))
-            for f in i:
-                shutil.move(f, (os.path.join(working_dir, folder_name)))
-        else:
-            for f in i:
-                shutil.move(f, (os.path.join(working_dir, folder_name)))
