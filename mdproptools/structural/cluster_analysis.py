@@ -58,7 +58,7 @@ def get_clusters(
     num_mols=None,
     num_atoms_per_mol=None,
     elements=None,
-    alter_atom_ids=False,
+    alter_atom_types=False,
     max_force=0.75,
     working_dir=None,
 ):
