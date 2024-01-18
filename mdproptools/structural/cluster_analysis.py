@@ -55,13 +55,44 @@ def get_clusters(
     num_atoms_per_mol,
     full_trajectory=False,
     frame=None,
-    num_mols=None,
-    num_atoms_per_mol=None,
     elements=None,
     alter_atom_types=False,
     max_force=0.75,
     working_dir=None,
 ):
+    """
+    Extracts clusters within a cutoff distance from an atom from LAMMPS trajectory files
+    and saves them as *.xyz files in the working directory. The LAMMPS dump files
+    should contain the following attributes: id, type, x, y, z, fx, fy, fz.
+
+    Args:
+        filename (str or file handle): the name of the LAMMPS dump file; can be
+            the entire name for a single file or a file pattern with the
+            wildcard character ('*') for multiple dumps; should contain the path to the
+            dumps if they are not placed in the same directory
+        atom_type (int): the type of the atom around which the clusters are extracted
+        r_cut (float): the cutoff distance for the clusters in Angstroms
+        num_mols (list of int): the number of molecules of each type in the system
+        num_atoms_per_mol (list of int): the number of atoms in each molecule type
+        full_trajectory (bool, optional): if True, all frames in the trajectory are
+            processed
+        frame (int, optional): the frame number to be processed if full_trajectory is
+            set to False
+        elements (list of str, optional): name of the atom elements in the system;
+            required if the elements are not in the LAMMPS dump file
+        alter_atom_types (bool, optional): if True, new atom types will be calculated to
+            distinguish between two similar atoms in the same molecule or a different
+            molecule; defaults to False if default LAMMPS atom types are to be used; if
+            True, the atom_type argument should match the new atom types and not the
+            default LAMMPS atom types
+        max_force (float, optional): the maximum force on the atom in eV/Angstroms
+        working_dir (str, optional): path to the working directory where the cluster
+            files will be saved; defaults to the current working directory
+
+    Returns:
+        int: the number of clusters written to *.xyz files
+    """
+    # Map the elements to the atom types
     if elements:
         elements = {i + 1: j for i, j in enumerate(elements)}
     if not working_dir:
@@ -72,13 +103,18 @@ def get_clusters(
     else:
         dumps = [dumps[frame]]
 
+    # Iterate over the frames in the trajectory and extract the clusters
     cluster_count = 0
     for index, dump in enumerate(dumps):
         print("Processing frame number: {}".format(index))
+
+        # Calculate the box dimensions and sort the data by atom id
         lx = dump.box.bounds[0][1] - dump.box.bounds[0][0]
         ly = dump.box.bounds[1][1] - dump.box.bounds[1][0]
         lz = dump.box.bounds[2][1] - dump.box.bounds[2][0]
         df = dump.data.sort_values(by=["id"])
+
+        # Calculate the molecule type and id for each atom
         mol_types = []
         mol_ids = []
         for mol_type, number_of_mols in enumerate(num_mols):
@@ -90,9 +126,13 @@ def get_clusters(
         df["mol_id"] = mol_ids
         if elements:
             df["element"] = df["type"].map(elements)
-        if alter_atom_ids:
+
+        # Calculate the new atom types if requested by the user
+        if alter_atom_types:
             data = _calc_atom_type(df.values, num_mols, num_atoms_per_mol)
             df["type"] = data[:, 0]
+
+        # Iterate over the atoms of the specified type and extract the clusters
         counter = 0
         atoms = df[df["type"] == atom_type]["id"]
         for i in atoms:
@@ -101,6 +141,8 @@ def get_clusters(
             data_head = df[df["id"] == i][["mol_type", "mol_id", "x", "y", "z"]].values[
                 0
             ]
+
+            # Calculate the squared distance between the atom and all other atoms
             data_i, rsq = _calc_rsq(
                 data_head,
                 df.loc[:, ["mol_type", "mol_id", "x", "y", "z"]].values,
@@ -109,31 +151,41 @@ def get_clusters(
                 lz,
                 2,
             )
+
+            # Extract the atoms within the cutoff distance from the atom
             cond = rsq < r_cut ** 2
             data_i = data_i[cond, :]
             ids = pd.DataFrame(
                 np.unique(data_i[:, [0, 1]], axis=0), columns=["mol_type", "mol_id"]
             )
             neighbor_df = ids.merge(df, on=["mol_type", "mol_id"])
+
+            # Calculate the minimum force on the atoms within each molecule in the
+            # neighbor dataframe
             min_force = (
                 neighbor_df.groupby(["mol_type", "mol_id"])
                 .agg({"fx": "sum", "fy": "sum", "fz": "sum"})
                 .min(axis=1)
                 * FORCE_CONSTANT
             )
+
+            # Extract the atoms with minimum force less than the maximum force specified
+            # by the user
             min_force_atoms = (
                 min_force[min_force < max_force]
                 .reset_index()[["mol_type", "mol_id"]]
                 .merge(neighbor_df, on=["mol_type", "mol_id"])
             )
-            # if elements:
-            # min_force_atoms['element'] = min_force_atoms['type'].map(elements)
+
+            # Remove the boundary effects from the filtered atoms
             data_head = df[df["id"] == i][["id", "x", "y", "z"]].values[0]
             data_i = min_force_atoms.loc[
                 min_force_atoms["id"] != i, ["id", "x", "y", "z"]
             ].values
             data_i = np.insert(data_i, 0, data_head, axis=0)
             data_i = _remove_boundary_effects(data_head, data_i, lx, ly, lz, 1)
+
+            # Write the clusters to *.xyz files
             fin_df = (
                 pd.DataFrame(data_i, columns=["id", "x", "y", "z"])
                 .merge(min_force_atoms[["element", "id"]], on="id")
