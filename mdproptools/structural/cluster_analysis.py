@@ -306,10 +306,19 @@ def get_unique_configurations(
         coord_mols = {}
         for ind, atoms in enumerate(main_atoms):
             coord_mols[ind] = {"mol": [], "sites": []}
-            for idx in range(len(cluster_atoms)):
-                if cluster_atoms[idx : idx + len(atoms)] == atoms:
-                    sub_mol = mol[idx : idx + len(atoms)]
+            # Initialize the index for cluster_atoms
+            idx = 0
+            while idx < len(cluster_atoms):
+                if cluster_atoms[idx:idx + len(atoms)] == atoms:
+                    v_ = idx + len(main_atoms[mol_num])
+                    sub_mol = mol[v_: v_ + len(atoms)]
                     coord_mols[ind]["mol"].append(sub_mol)
+                    # Move the index to the next position after the match
+                    idx += len(atoms)
+                else:
+                    # If no match, move to the next position
+                    idx += 1
+            # Add the coordinating atoms in each sub_mol to the dict
             for idx, sub_mol in enumerate(coord_mols[ind]["mol"]):
                 coords = []
                 for coord_atom in coord_atoms:
