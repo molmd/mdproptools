@@ -151,8 +151,8 @@ def get_clusters(
             ]
 
             # Calculate the squared distance between the atom and all other atoms
-            data_i, rsq = _calc_rsq(
-                data_head,
+            data_all, rsq = _calc_rsq(
+                data_head_i,
                 df.loc[:, ["mol_type", "mol_id", "x", "y", "z"]].values,
                 lx,
                 ly,
