@@ -162,9 +162,9 @@ def get_clusters(
 
             # Extract the atoms within the cutoff distance from the atom
             cond = rsq < r_cut ** 2
-            data_i = data_i[cond, :]
+            data_all = data_all[cond, :]
             ids = pd.DataFrame(
-                np.unique(data_i[:, [0, 1]], axis=0), columns=["mol_type", "mol_id"]
+                np.unique(data_all[:, [0, 1]], axis=0), columns=["mol_type", "mol_id"]
             )
             neighbor_df = ids.merge(df, on=["mol_type", "mol_id"])
 
