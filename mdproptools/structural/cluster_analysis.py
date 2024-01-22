@@ -266,7 +266,7 @@ def get_unique_configurations(
 
     # Iterate over the cluster files and process each one
     full_coord_mols = {"cluster": [], "num_mols": [], "coordinating_atoms": []}
-    for file in cluster_files:
+    for file_num, file in enumerate(tqdm(cluster_files, desc="Processing cluster files")):
         mol = Molecule.from_file(file)
         full_coord_mols["cluster"].append(ntpath.basename(file))
 
