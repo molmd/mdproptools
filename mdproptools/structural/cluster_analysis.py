@@ -15,6 +15,8 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 
+from tqdm import tqdm
+
 from pymatgen.core.structure import Molecule
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
@@ -107,9 +109,7 @@ def get_clusters(
 
     # Iterate over the frames in the trajectory and extract the clusters
     cluster_count = 0
-    for index, dump in enumerate(dumps):
-        print("Processing frame number: {}".format(index))
-
+    for index, dump in enumerate(tqdm(dumps, desc="Processing dump files")):
         # Calculate the box dimensions and sort the data by atom id
         lx = dump.box.bounds[0][1] - dump.box.bounds[0][0]
         ly = dump.box.bounds[1][1] - dump.box.bounds[1][0]
