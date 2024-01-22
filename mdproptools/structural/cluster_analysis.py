@@ -280,7 +280,29 @@ def get_unique_configurations(
             coord_atoms = [
                 i for i in coord_atoms if i.species_string in type_coord_atoms
             ]
-        cluster_atoms = [str(i) for i in mol.species]
+
+        # Get the molecule number to which the atom of interest belongs
+        if file_num == 0:
+            cluster_atoms = [str(i) for i in mol.species]
+            idx = 0
+            match_found = False
+
+            while idx < len(cluster_atoms):
+                for ind, atoms in enumerate(main_atoms):
+                    if cluster_atoms[idx:idx + len(atoms)] == atoms:
+                        mol_num = ind
+                        match_found = True
+                        break
+
+                if match_found:
+                    break
+                else:
+                    idx += 1
+
+        # Get a list of the atoms in each cluster excluding the ones in the molecule
+        # to which the atom of interest belongs
+        cluster_atoms = [str(i) for i in mol.species][len(main_atoms[mol_num]):]
+
         coord_mols = {}
         for ind, atoms in enumerate(main_atoms):
             coord_mols[ind] = {"mol": [], "sites": []}
