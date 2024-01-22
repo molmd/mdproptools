@@ -185,17 +185,37 @@ def get_clusters(
                 .merge(neighbor_df, on=["mol_type", "mol_id"])
             )
 
+            # Find the corresponding mol_id and mol_type for atom i
+            atom_i_data = df[df["id"] == i].iloc[0]
+            mol_id_corresponding_to_i = atom_i_data["mol_id"]
+            mol_type_corresponding_to_i = atom_i_data["mol_type"]
+
+            # Extract data for atom i and its corresponding mol
+            data_head_i = atom_i_data[["id", "x", "y", "z"]].values
+
+            # Extract data for the corresponding mol (excluding atom i)
+            data_head_mol = min_force_atoms[
+                (min_force_atoms["mol_id"] == mol_id_corresponding_to_i) &
+                (min_force_atoms["mol_type"] == mol_type_corresponding_to_i) &
+                (min_force_atoms["id"] != i)
+                ][["id", "x", "y", "z"]].values
+
+            # Extract data for all other atoms (excluding atom i and its mol)
+            data_all = min_force_atoms[
+                (min_force_atoms["mol_id"] != mol_id_corresponding_to_i) |
+                (min_force_atoms["mol_type"] != mol_type_corresponding_to_i)
+                ][["id", "x", "y", "z"]].values
+
+            # Combine data for atom i, its mol, and all other atoms (all this to place
+            # atom i and the molecule it corresponds to at the top of the data)
+            data_all = np.vstack((data_head_i, data_head_mol, data_all))
+
             # Remove the boundary effects from the filtered atoms
-            data_head = df[df["id"] == i][["id", "x", "y", "z"]].values[0]
-            data_i = min_force_atoms.loc[
-                min_force_atoms["id"] != i, ["id", "x", "y", "z"]
-            ].values
-            data_i = np.insert(data_i, 0, data_head, axis=0)
-            data_i = _remove_boundary_effects(data_head, data_i, lx, ly, lz, 1)
+            data_all = _remove_boundary_effects(data_head_i, data_all, lx, ly, lz, 1)
 
             # Write the clusters to *.xyz files
             fin_df = (
-                pd.DataFrame(data_i, columns=["id", "x", "y", "z"])
+                pd.DataFrame(data_all, columns=["id", "x", "y", "z"])
                 .merge(min_force_atoms[["element", "id"]], on="id")
                 .drop("id", axis=1)
                 .set_index("element")
