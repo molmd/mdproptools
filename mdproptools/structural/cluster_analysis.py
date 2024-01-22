@@ -356,10 +356,16 @@ def get_unique_configurations(
     else:
         num_col_names = [f"num_{i+1}" for i in range(len(molecules))]
         atoms_col_names = [f"atoms_{i + 1}" for i in range(len(molecules))]
-    split_df = pd.DataFrame(df["num_mols"].tolist(), columns=num_col_names,)
+    split_df = pd.DataFrame(
+        df["num_mols"].tolist(),
+        columns=num_col_names,
+    )
     df = pd.concat([df, split_df], axis=1)
     df = df.drop("num_mols", axis=1)
-    split_df = pd.DataFrame(df["coordinating_atoms"].tolist(), columns=atoms_col_names,)
+    split_df = pd.DataFrame(
+        df["coordinating_atoms"].tolist(),
+        columns=atoms_col_names,
+    )
     df = pd.concat([df, split_df], axis=1)
     df = df.drop("coordinating_atoms", axis=1)
     df1 = (
