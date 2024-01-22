@@ -201,9 +201,6 @@ def get_clusters(
 
             # Extract data for all other atoms (excluding atom i and its mol)
             data_all = min_force_atoms[
-                (min_force_atoms["mol_id"] != mol_id_corresponding_to_i) |
-                (min_force_atoms["mol_type"] != mol_type_corresponding_to_i)
-                ][["id", "x", "y", "z"]].values
                 (min_force_atoms["mol_id"] != mol_id_corresponding_to_i)
                 | (min_force_atoms["mol_type"] != mol_type_corresponding_to_i)
             ][["id", "x", "y", "z"]].values
