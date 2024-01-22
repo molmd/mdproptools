@@ -127,7 +127,7 @@ def get_clusters(
         df["mol_type"] = mol_types
         df["mol_id"] = mol_ids
 
-        if "elements" not in df.columns and not elements:
+        if "element" not in df.columns and not elements:
             raise ValueError(
                 "The elements of the atoms in the system should be provided if they "
                 "are not in the dump files."
