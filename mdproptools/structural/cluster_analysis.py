@@ -146,8 +146,7 @@ def get_clusters(
         atoms = df[df["type"] == atom_type]["id"]
         for i in atoms:
             counter += 1
-            print("Processing atom number: {}".format(counter - 1))
-            data_head = df[df["id"] == i][["mol_type", "mol_id", "x", "y", "z"]].values[
+            data_head_i = df[df["id"] == i][["mol_type", "mol_id", "x", "y", "z"]].values[
                 0
             ]
 
@@ -217,11 +216,6 @@ def get_clusters(
             )
             f.close()
             cluster_count += 1
-        print(
-            "{} clusters written to *.xyz files".format(
-                len(df[df["type"] == atom_type]["id"])
-            )
-        )
     return cluster_count
 
 
