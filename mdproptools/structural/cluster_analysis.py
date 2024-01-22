@@ -252,16 +252,31 @@ def get_unique_configurations(
     zip=True,
 ):
     working_dir = working_dir or os.getcwd()
+
+    # Get a list of the cluster files
     cluster_files = glob.glob(f"{working_dir}/{cluster_pattern}")
+
+    # Get a list of the atoms in each molecule
     main_atoms = []
     for mol in molecules:
         main_atoms.append([str(i) for i in mol.species])
+
+    # Initialize the molecule number to which the atom of interest belongs
+    mol_num = None
+
+    # Iterate over the cluster files and process each one
     full_coord_mols = {"cluster": [], "num_mols": [], "coordinating_atoms": []}
     for file in cluster_files:
         mol = Molecule.from_file(file)
         full_coord_mols["cluster"].append(ntpath.basename(file))
+
+        # Get the coordinating atoms to the fist atom in each cluster; it is assumed
+        # that the first atom in each cluster is the atom of interest (this is the case
+        # when using the get_clusters function)
         coord_atoms = mol.get_neighbors(mol[0], r_cut)
-        if type_coord_atoms:
+
+        # Filter for coordinating atoms of the type specified by the user
+        if coord_atoms and type_coord_atoms:
             coord_atoms = [
                 i for i in coord_atoms if i.species_string in type_coord_atoms
             ]
@@ -281,6 +296,8 @@ def get_unique_configurations(
                 coord_mols[ind]["sites"].append(coords)
             coord_mols[ind]["num_mol"] = len(coord_mols[ind]["mol"])
             del coord_mols[ind]["mol"]
+
+        # Add the number of molecules and the coordinating atoms to the full dict
         full_coord_mols["num_mols"].append(
             list(coord_mols[k]["num_mol"] for k in coord_mols)
         )
@@ -288,6 +305,7 @@ def get_unique_configurations(
             list(coord_mols[k]["sites"] for k in coord_mols)
         )
 
+    # Cleanups and formatting for the output dataframes
     full_str_coord = []
     for i in full_coord_mols["coordinating_atoms"]:
         str_coord = []
