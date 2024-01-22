@@ -19,7 +19,6 @@ from tqdm import tqdm
 
 from pymatgen.core.structure import Molecule
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
-from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from mdproptools.structural.rdf_cn import _calc_rsq, _calc_atom_type
 
@@ -146,9 +145,9 @@ def get_clusters(
         atoms = df[df["type"] == atom_type]["id"]
         for i in atoms:
             counter += 1
-            data_head_i = df[df["id"] == i][["mol_type", "mol_id", "x", "y", "z"]].values[
-                0
-            ]
+            data_head_i = df[df["id"] == i][
+                ["mol_type", "mol_id", "x", "y", "z"]
+            ].values[0]
 
             # Calculate the squared distance between the atom and all other atoms
             data_all, rsq = _calc_rsq(
@@ -161,7 +160,7 @@ def get_clusters(
             )
 
             # Extract the atoms within the cutoff distance from the atom
-            cond = rsq < r_cut ** 2
+            cond = rsq < r_cut**2
             data_all = data_all[cond, :]
             ids = pd.DataFrame(
                 np.unique(data_all[:, [0, 1]], axis=0), columns=["mol_type", "mol_id"]
@@ -195,16 +194,19 @@ def get_clusters(
 
             # Extract data for the corresponding mol (excluding atom i)
             data_head_mol = min_force_atoms[
-                (min_force_atoms["mol_id"] == mol_id_corresponding_to_i) &
-                (min_force_atoms["mol_type"] == mol_type_corresponding_to_i) &
-                (min_force_atoms["id"] != i)
-                ][["id", "x", "y", "z"]].values
+                (min_force_atoms["mol_id"] == mol_id_corresponding_to_i)
+                & (min_force_atoms["mol_type"] == mol_type_corresponding_to_i)
+                & (min_force_atoms["id"] != i)
+            ][["id", "x", "y", "z"]].values
 
             # Extract data for all other atoms (excluding atom i and its mol)
             data_all = min_force_atoms[
                 (min_force_atoms["mol_id"] != mol_id_corresponding_to_i) |
                 (min_force_atoms["mol_type"] != mol_type_corresponding_to_i)
                 ][["id", "x", "y", "z"]].values
+                (min_force_atoms["mol_id"] != mol_id_corresponding_to_i)
+                | (min_force_atoms["mol_type"] != mol_type_corresponding_to_i)
+            ][["id", "x", "y", "z"]].values
 
             # Combine data for atom i, its mol, and all other atoms (all this to place
             # atom i and the molecule it corresponds to at the top of the data)
@@ -266,7 +268,9 @@ def get_unique_configurations(
 
     # Iterate over the cluster files and process each one
     full_coord_mols = {"cluster": [], "num_mols": [], "coordinating_atoms": []}
-    for file_num, file in enumerate(tqdm(cluster_files, desc="Processing cluster files")):
+    for file_num, file in enumerate(
+        tqdm(cluster_files, desc="Processing cluster files")
+    ):
         mol = Molecule.from_file(file)
         full_coord_mols["cluster"].append(ntpath.basename(file))
 
@@ -289,7 +293,7 @@ def get_unique_configurations(
 
             while idx < len(cluster_atoms):
                 for ind, atoms in enumerate(main_atoms):
-                    if cluster_atoms[idx:idx + len(atoms)] == atoms:
+                    if cluster_atoms[idx : idx + len(atoms)] == atoms:
                         mol_num = ind
                         match_found = True
                         break
@@ -301,7 +305,7 @@ def get_unique_configurations(
 
         # Get a list of the atoms in each cluster excluding the ones in the molecule
         # to which the atom of interest belongs
-        cluster_atoms = [str(i) for i in mol.species][len(main_atoms[mol_num]):]
+        cluster_atoms = [str(i) for i in mol.species][len(main_atoms[mol_num]) :]
 
         coord_mols = {}
         for ind, atoms in enumerate(main_atoms):
@@ -309,9 +313,9 @@ def get_unique_configurations(
             # Initialize the index for cluster_atoms
             idx = 0
             while idx < len(cluster_atoms):
-                if cluster_atoms[idx:idx + len(atoms)] == atoms:
+                if cluster_atoms[idx : idx + len(atoms)] == atoms:
                     v_ = idx + len(main_atoms[mol_num])
-                    sub_mol = mol[v_: v_ + len(atoms)]
+                    sub_mol = mol[v_ : v_ + len(atoms)]
                     coord_mols[ind]["mol"].append(sub_mol)
                     # Move the index to the next position after the match
                     idx += len(atoms)
@@ -401,4 +405,3 @@ def get_unique_configurations(
         shutil.make_archive(f"{working_dir}/Clusters", "zip", clusters_dir)
         shutil.rmtree(clusters_dir)
     return df, df1
-
