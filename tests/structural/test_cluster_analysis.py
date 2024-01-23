@@ -1,7 +1,6 @@
-import os
-import glob
-import filecmp
-import unittest
+import os, glob, filecmp, unittest
+
+from pathlib import Path
 
 import pandas as pd
 
@@ -15,8 +14,9 @@ from mdproptools.structural.cluster_analysis import (
 
 class TestClusterAnalysis(unittest.TestCase):
     def setUp(self):
-        self.test_dir = os.path.join(os.path.dirname(__file__), "test_files")
-        self.dump_files = os.path.join(self.test_dir, "Mg_2TFSI_G1.lammpstrj.*")
+        self.test_dir = Path(__file__).parent / "test_files"
+        self.data_dir = Path(__file__).resolve().parents[2] / "data" / "structural"
+        self.dump_files = os.path.join(self.data_dir, "Mg_2TFSI_G1.lammpstrj.*")
         self.elements = ["O", "C", "H", "N", "S", "O", "F", "Mg"]
         self.r_cut = 2.3
         self.max_force = 0.75
@@ -40,15 +40,15 @@ class TestClusterAnalysis(unittest.TestCase):
         num_clusters = self.run_get_clusters(32, True)
         self.assertEqual(num_clusters, 33)
 
-        dme = Molecule.from_file(os.path.join(self.test_dir, "dme.pdb"))
-        tfsi = Molecule.from_file(os.path.join(self.test_dir, "tfsi.pdb"))
-        mg = Molecule.from_file(os.path.join(self.test_dir, "mg.pdb"))
+        dme = Molecule.from_file(os.path.join(self.data_dir, "dme.pdb"))
+        tfsi = Molecule.from_file(os.path.join(self.data_dir, "tfsi.pdb"))
+        mg = Molecule.from_file(os.path.join(self.data_dir, "mg.pdb"))
 
         clusters_df_test, conf_df_test = get_unique_configurations(
             cluster_pattern="Cluster_*.xyz",
             r_cut=self.r_cut,
             molecules=[dme, tfsi, mg],
-            type_coord_atoms=["O", "N", "Li"],
+            type_coord_atoms=["O", "N", "Mg"],
             working_dir=None,
             find_top=True,
             perc=None,
