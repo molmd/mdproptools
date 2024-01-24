@@ -59,13 +59,13 @@ def _calc_rsq(data_head, mol_data, lx, ly, lz, num_of_ids=1):
 
 
 @numba.jit(cache=True, nopython=True)  # , parallel=True)
-def _remove_outliers(data_i, rsq, r_cut, ddr, num_of_ids=1):
+def _remove_outliers(data_i, rsq, r_cut, ddr):
     """
     Removes pairs with distances bigger than the cutoff radius.
     """
     cond = rsq < r_cut ** 2
     data_i = data_i[cond, :]
-    data_i[:, num_of_ids + 4] = np.sqrt(data_i[:, num_of_ids + 3]) / ddr
+    data_i[:, 5] = np.sqrt(data_i[:, 4]) / ddr
     return data_i
 
 
@@ -130,14 +130,12 @@ def _rdf_mol_loop(
     lx, ly, lz = lengths
     for i in prange(0, atom_data.shape[0]):
         data_head = atom_data[i, :]
-        data_i, rsq = _calc_rsq(data_head, mol_data, lx, ly, lz, num_of_ids=2)
-        data_i = _remove_outliers(data_i, rsq, r_cut, ddr, num_of_ids=2)
+        data_i, rsq = _calc_rsq(data_head, mol_data, lx, ly, lz)
+        data_i = _remove_outliers(data_i, rsq, r_cut, ddr)
         for kl in prange(0, num_relations):
             nta1, nta2 = relation_matrix[kl]
             if int(data_head[0]) == nta1:
-                condition1 = data_i[:, 0].astype(np.int64) == nta2
-                condition2 = data_i[:, 1].astype(np.int64) != int(data_head[1])
-                v_j = data_i[condition1 & condition2]
+                v_j = data_i[data_i[:, 0].astype(np.int64) == nta2]
                 for j in v_j[:, -1].astype(np.int64):
                     rdf_part[kl][j] += 1
     return rdf_part
@@ -154,14 +152,12 @@ def _cn_mol_loop(
     lx, ly, lz = lengths
     for i in prange(0, atom_data.shape[0]):
         data_head = atom_data[i, :]
-        data_i, rsq = _calc_rsq(data_head, mol_data, lx, ly, lz, num_of_ids=2)
+        data_i, rsq = _calc_rsq(data_head, mol_data, lx, ly, lz)
         for kl in prange(0, num_relations):
             nta1, nta2 = relation_matrix[kl]
-            data_i_cond = _remove_outliers(data_i, rsq, r_cut[kl], ddr, num_of_ids=2)
+            data_i_cond = _remove_outliers(data_i, rsq, r_cut[kl], ddr)
             if int(data_head[0]) == nta1:
-                condition1 = data_i_cond[:, 0].astype(np.int64) == nta2
-                condition2 = data_i_cond[:, 1].astype(np.int64) != int(data_head[1])
-                v_j = data_i_cond[condition1 & condition2]
+                v_j = data_i_cond[data_i_cond[:, 0].astype(np.int64) == nta2]
                 cn[kl] += len(v_j[:, -1])
     return cn
 
@@ -219,56 +215,30 @@ def _calc_atom_type(data, num_mols, num_atoms):
     return data
 
 
-def _define_mol_cols(df, num_mols, num_atoms_per_mol, mass, lengths):
+def _define_mol_cols(df, num_mols, num_atoms_per_mol, mass):
     """
     Calculates the center of mass of each molecule.
     """
     mol_types = []
     mol_ids = []
-    count = 0
     for mol_type, number_of_mols in enumerate(num_mols):
         for mol_id in range(number_of_mols):
-            count += 1
             for atom_id in range(num_atoms_per_mol[mol_type]):
                 mol_types.append(mol_type + 1)
-                # mol_ids.append(mol_id + 1)
-                mol_ids.append(count)
+                mol_ids.append(mol_id + 1)
     df["mol_type"] = mol_types
     df["mol_id"] = mol_ids
     df["mass"] = df.apply(lambda x: mass[int(x.type - 1)], axis=1)
-
-    df = df.set_index("mol_id")
-
-    lx, ly, lz = lengths
-    lx2, ly2, lz2 = lx / 2, ly / 2, lz / 2
-
-    df["xt"] = df.groupby("mol_id")["x"].first()
-    df["yt"] = df.groupby("mol_id")["y"].first()
-    df["zt"] = df.groupby("mol_id")["z"].first()
-
-    df.reset_index(inplace=True)
-
-    df["relx"] = df["x"] - df["xt"]
-    df["rely"] = df["y"] - df["yt"]
-    df["relz"] = df["z"] - df["zt"]
-
-    df["ux"] = np.where(df["relx"] > lx2, df["x"] - lx,
-                          np.where(-df["relx"] > lx2, df["x"] + lx, df["x"]))
-    df["uy"] = np.where(df["rely"] > ly2, df["y"] - ly,
-                          np.where(-df["rely"] > ly2, df["y"] + ly, df["y"]))
-    df["uz"] = np.where(df["relz"] > lz2, df["z"] - lz,
-                          np.where(-df["relz"] > lz2, df["z"] + lz, df["z"]))
-
-    mol_df = df.drop(["type", "id"], axis=1).set_index(["mol_type", "mol_id"])
-    mol_df = mol_df.groupby(["mol_type", "mol_id"]).apply(
+    df = df.drop(["type", "id"], axis=1).set_index(["mol_type", "mol_id"])
+    mol_df = df.groupby(["mol_type", "mol_id"]).apply(
         lambda x: pd.Series(
-            x["mass"].values @ x[["ux", "uy", "uz"]].values / x.mass.sum(),
-            index=["ux", "uy", "uz"],
+            x["mass"].values @ x[["x", "y", "z"]].values / x.mass.sum(),
+            index=["x", "y", "z"],
         )
     )
-    mol_df.rename(columns={"ux": "x", "uy": "y", "uz": "z"}, inplace=True)
-    mol_df = mol_df.reset_index().rename(columns={"mol_type": "type"})
-    return mol_df, df[["type", "mol_id", "x", "y", "z"]]
+    return (
+        mol_df.reset_index().drop("mol_id", axis=1).rename(columns={"mol_type": "type"})
+    )
 
 
 def _calc_props(
@@ -744,9 +714,8 @@ def calc_molecular_rdf(
     for dump in dumps:
         start_traj_loop, ref_df, df = _define_dataframes(dump)
         # TODO: checking step
-        box_lengths = dump.box.to_lattice().lengths
-        df, ref_df = _define_mol_cols(df, num_mols, num_atoms_per_mol, mass, box_lengths)
-        # ref_df = ref_df.drop("id", axis=1)
+        df = _define_mol_cols(df, num_mols, num_atoms_per_mol, mass)
+        ref_df = ref_df.drop("id", axis=1)
         rho, rho_pairs, box_lengths, atom_types, object_types = _calc_props(
             dump, ref_df, df, num_types, mass, num_relations, partial_relations, "type"
         )
@@ -852,10 +821,8 @@ def calc_molecular_cn(
     for dump in dumps:
         start_traj_loop, ref_df, df = _define_dataframes(dump)
         # TODO: checking step
-        box_lengths = dump.box.to_lattice().lengths
-        df, ref_df = _define_mol_cols(df, num_mols, num_atoms_per_mol, mass, box_lengths)
-        # df = _define_mol_cols(df, num_mols, num_atoms_per_mol, mass)
-        # ref_df = ref_df.drop("id", axis=1)
+        df = _define_mol_cols(df, num_mols, num_atoms_per_mol, mass)
+        ref_df = ref_df.drop("id", axis=1)
         rho, rho_pairs, box_lengths, atom_types, object_types = _calc_props(
             dump, ref_df, df, num_types, mass, num_relations, partial_relations, "type"
         )
@@ -887,6 +854,53 @@ def calc_molecular_cn(
     final_df = _save_cn(relation_matrix, path_or_buff, cn_sum, save_mode)
     return final_df
 
+def calc_intermolecular_rdf(r_cut, bin_size, num_types, mass, partial_relations,
+                            filename, num_mols, num_atoms_per_mol,
+                            path_or_buff='rdf_mol.csv',
+                            save_mode=True):
+    # TODO: recheck this function, was written quickly for Li-S project
+    # TODO: prevent calculating rdf between the mol and itself
+    # from mdproptools.common.com_mols import calc_com
+    dumps, num_bins, radii, num_files, num_relations = \
+        _initialize(r_cut,
+                    bin_size,
+                    filename,
+                    partial_relations)
+    rdf_part_sum = np.zeros((num_relations, num_bins))
+    for dump in dumps:
+        start_traj_loop, ref_df, df = _define_dataframes(dump)
+        df = _define_mol_cols(df, num_mols, num_atoms_per_mol, mass)
+        # df = calc_com(df, num_mols, num_atoms_per_mol, mass, atom_attributes=["x", "y", "z"])
+        # ref_df = ref_df.drop('id', axis=1)
+        atom_types_col = 'type'
+        rho, rho_pairs, box_lengths, atom_types, object_types = \
+            _calc_props(dump, df, df, num_types, mass, num_relations,
+                        partial_relations, atom_types_col,
+                        num_atoms_per_mol=num_atoms_per_mol)
+
+        relation_matrix = np.asarray(partial_relations).transpose()
+        rdf_part = np.zeros((num_relations, num_bins))
+        st = time()
+        # atom_data = ref_df.values
+        mol_data = df.values
+        rdf_part = _rdf_mol_loop(mol_data, mol_data, relation_matrix,
+                                 num_relations, box_lengths, r_cut, bin_size,
+                                 rdf_part)
+        print("time:", time() - st)
+        print("Finished computing RDF for timestep", dump.timestep)
+
+        _, rdf_part = _normalize_rdf(bin_size, rho_pairs, atom_types,
+                                     partial_relations, num_relations, num_bins,
+                                     rdf_part)
+        rdf_part_sum += rdf_part
+
+        end_traj_loop = timer()
+        print('Trajectory loop took:', end_traj_loop - start_traj_loop, 's')
+
+    rdf_part_sum = rdf_part_sum / num_files
+    final_df = _save_rdf(radii, relation_matrix, path_or_buff, save_mode,
+                         rdf_part_sum)
+    return final_df
 
 if __name__ == "__main__":
     print()
