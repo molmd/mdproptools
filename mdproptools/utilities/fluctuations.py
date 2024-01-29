@@ -54,3 +54,4 @@ def plot_fluctuations(
     )
     fig.tight_layout(pad=3)
     fig.savefig(f"{working_dir}/{filename}", bbox_inches="tight", pad_inches=0.1)
+    return stats["mean"], stats["std"]
