@@ -1,15 +1,10 @@
 import os
 
 import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt
 
 from mdproptools.common import constants
 from mdproptools.utilities.plots import set_axis
-
-sns.set()
-sns.set_style("ticks", {"xtick.major.size": 0.1, "ytick.major.size": 0.1})
-sns.set_palette(sns.color_palette(["#00807D", "#8CC8D5", "#A7A7A7"], n_colors=3))
 
 
 def _get_stats(stats):
