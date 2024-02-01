@@ -228,7 +228,7 @@ def get_clusters(
                 "0" * (len(str(len(atoms))) - len(str(counter - 1))),
                 counter - 1,
             )
-            f = open((os.path.join(working_dir, filename)), "a")
+            f = open((os.path.join(working_dir, filename)), "w")
             f.write("{}\n\n".format(len(fin_df)))
             fin_df.to_csv(
                 f, header=False, index=False, sep="\t", float_format="%15.10f"
