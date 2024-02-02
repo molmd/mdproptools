@@ -1,6 +1,8 @@
-import os, glob, unittest
+import os, glob
 
 from pathlib import Path
+
+import pytest
 
 import pandas as pd
 
@@ -9,19 +11,15 @@ from pymatgen.io.lammps.outputs import parse_lammps_log
 from mdproptools.utilities.fluctuations import plot_fluctuations
 
 
-class TestFluctuations(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.data_dir = Path(__file__).resolve().parents[2] / "data" / "utilities"
-        cls.test_dir = Path(__file__).parent / "test_files"
+class TestFluctuations:
+    @pytest.fixture(autouse=True)
+    def setup_class(self, tmp_path):
+        self.data_dir = Path(__file__).resolve().parents[2] / "data" / "utilities"
+        self.test_dir = Path(__file__).parent / "test_files"
+        self.working_dir = tmp_path
+        yield
 
-    @classmethod
-    def tearDownClass(cls):
-        png_files_test = glob.glob("*.png")
-        for file in png_files_test:
-            os.remove(file)
-
-    def test_fluctuations(self):
+    def run_fluctuations(self):
         log_file = self.data_dir / "log.mixture_npt"
         df = pd.read_csv(self.test_dir / "prop_stats.csv")
         log = parse_lammps_log(str(log_file))
@@ -49,8 +47,19 @@ class TestFluctuations(unittest.TestCase):
 
         prop_stats = {}
         for prop, (title, filename) in props.items():
-            prop_mean, prop_std = plot_fluctuations(log[0], prop, title, filename)
+            prop_mean, prop_std = plot_fluctuations(
+                log[0],
+                prop,
+                title,
+                filename,
+                timestep=1,
+                units="real",
+                working_dir=self.working_dir,
+            )
             prop_stats[prop] = (prop_mean, prop_std)
         df_test = pd.DataFrame(prop_stats).T.reset_index()
         df_test.columns = ["prop", "mean", "std"]
         pd.testing.assert_frame_equal(df_test, df)
+
+    def test_fluctuations(self, benchmark):
+        benchmark(self.run_fluctuations)
