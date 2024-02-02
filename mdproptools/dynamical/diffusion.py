@@ -19,6 +19,7 @@ from pymatgen.io.lammps.outputs import parse_lammps_log, parse_lammps_dumps
 from mdproptools.common import constants
 from mdproptools.common.com_mols import calc_com
 from mdproptools.utilities.plots import set_axis
+from mdproptools.utilities.log import concat_log
 
 __author__ = "Rasha Atwi, Matthew Bliss"
 __maintainer__ = "Rasha Atwi"
@@ -158,19 +159,7 @@ class Diffusion:
         return msd, msd_all
 
     def get_msd_from_log(self, log_pattern):
-        log_files = glob.glob(f"{self.outputs_dir}/{log_pattern}")
-        # based on pymatgen.io.lammps.outputs.parse_lammps_dumps function
-        if len(log_files) > 1:
-            pattern = r"%s" % log_pattern.replace("*", "([0-9]+)")
-            pattern = ".*" + pattern.replace("\\", "\\\\")
-            files = sorted(files, key=lambda f: int(re.match(pattern, f).group(1)))
-        list_log_df = []
-        for file in log_files:
-            log_df = parse_lammps_log(file)
-            list_log_df.append(log_df[0])
-        for p, l in enumerate(list_log_df[:-1]):
-            list_log_df[p] = l[:-1]
-        full_log = pd.concat(list_log_df, ignore_index=True)
+        full_log = concat_log(log_pattern, step=None, working_dir=self.outputs_dir)
         msd = full_log.filter(regex="msd")
         for col in msd:
             msd.loc[:, col] = msd[col] * constants.DISTANCE_CONVERSION[self.units] ** 2
