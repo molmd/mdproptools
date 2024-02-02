@@ -25,6 +25,12 @@ setuptools.setup(
         "llvmlite == 0.39.1",
         "doepy >= 0.0.1",
     ],
+    extras_require={
+        'test': [
+            "pytest",
+            "pytest-benchmark",
+        ],
+    },
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
