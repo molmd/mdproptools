@@ -17,9 +17,9 @@ from matplotlib.ticker import ScalarFormatter
 from pymatgen.io.lammps.outputs import parse_lammps_log, parse_lammps_dumps
 
 from mdproptools.common import constants
+from mdproptools.utilities.log import concat_log
 from mdproptools.common.com_mols import calc_com
 from mdproptools.utilities.plots import set_axis
-from mdproptools.utilities.log import concat_log
 
 __author__ = "Rasha Atwi, Matthew Bliss"
 __maintainer__ = "Rasha Atwi"
