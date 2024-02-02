@@ -1,4 +1,0 @@
-num_dme,num_tfsi,num_mg,atoms_dme,atoms_tfsi,atoms_mg,count,%,cluster
-1,2,0,2O,2O:2O,,58,35.15151515151515,Cluster_0_20.xyz
-2,1,0,2O:2O,2O,,40,24.242424242424242,Cluster_4_10.xyz
-3,0,0,2O:2O:2O,,,30,18.181818181818183,Cluster_3_09.xyz
