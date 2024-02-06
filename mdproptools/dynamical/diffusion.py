@@ -43,7 +43,7 @@ class Diffusion:
             timestep (int or float): Timestep used in the LAMMPS simulation in the same
                 units specified as input; default is 1 fs for real units.
             units (str): Units used in the LAMMMPS simulations; used to convert to SI
-                units; defaults to real unit
+                units; defaults to real unit.
             outputs_dir (str): Directory where the LAMMPS trajectory or log files are
                 located; defaults to current working directory.
             diff_dir (str): Directory where the diffusion results (.txt, .csv, and .png
@@ -110,12 +110,12 @@ class Diffusion:
         tao_coeff=4,
     ):
         """
-        Calculate the mean square displacement (msd) from a LAMMPS trajectory file. MSD
+        Calculate the mean square displacement (MSD) from a LAMMPS trajectory file. MSD
         is calculated as the sum of the square of the displacement in each direction
         (dx, dy, dz), averaged over all atoms or the center of mass of species of each
         specie type in the system. The first point in time is taken as the reference for
         calculating the displacements at each time. Note that this is not the case
-        for the msd_int output returned when avg_interval=True, where the reference
+        for the msd_int output returned when `avg_interval` is True, where the reference
         for each time interval is the previous time interval, allowing to average over
         all possible choices of the time interval over the entire trajectory,
         thereby making it possible to get a linear MSD as a function of time for each
@@ -127,18 +127,18 @@ class Diffusion:
                 or 'com' for the center of mass of each specie type in the system;
                 defaults to com.
             num_mols (list of int, optional): Number of molecules of each molecule type;
-                should be consistent with PackmolRunner input; required if msd_type
+                should be consistent with PackmolRunner input; required if `msd_type`
                 is set to com; defaults to None.
             num_atoms_per_mol (list of int, optional): Number of atoms in each molecule
-                type; order is similar to that in num_mols; required if msd_type is set
-                to com; defaults to None.
+                type; order is similar to that in num_mols; required if `msd_type` is
+                set to com; defaults to None.
             mass (list of float, optional): Mass of unique atom types in a LAMMPS dump
                 file; should be in the same order as in the LAMMPS data file and in
                 the same units specified as input, e.g. if the "real" units are used,
-                the masses should be in g/mole; required if msd_type is set to com and
+                the masses should be in g/mole; required if `msd_type` is set to com and
                 the masses are not available in the dump file; defaults to None.
             com_drift (bool, optional): Whether to correct for the center of mass drift
-                in the system; only used when msd_type is com; defaults to False.
+                in the system; only used when `msd_type` is com; defaults to False.
             avg_interval (bool, optional): Whether to calculate the msd for individual
                 atoms or individual species from each type; can be later used to
                 calculate the distribution of diffusion coefficients for a given atom or
@@ -146,27 +146,28 @@ class Diffusion:
                 atom or specie type; defaults to False.
             tao_coeff (int, optional): Time interval (step, unitless) to use when
                 sampling the trajectory to get msd_int, which corresponds to the msd
-                for each atom (when msd_type is allatom) or specie (when msd_type is com)
-                averaged over all possible choices of time interval over the entire
-                trajectory; for example, if your dump frequency is every 50,000 steps,
-                and you choose tao to be 4, then the time interval for calculating the
-                msd will be every 200,000 steps; defaults to 4.
+                for each atom (when `msd_type` is allatom) or specie (when `msd_type`
+                is com), averaged over all possible choices of time interval over the
+                entire trajectory; for example, if your dump frequency is every
+                50,000 steps, and you choose tao to be 4, then the time interval for
+                calculating the msd will be every 200,000 steps; defaults to 4.
 
         Returns:
             tuple of pd.DataFrames:
                 - msd: The square of the displacement in each direction along with the
-                    MSD as a function of time, averaged over ALL atoms (when msd_type
-                    is allatom) or ALL species of the same type (when msd_type is com).
+                    MSD as a function of time, averaged over ALL atoms (when `msd_type`
+                    is allatom) or ALL species of the same type (when `msd_type` is com).
                     The first time step is the reference.
                 - msd_all: The square of the displacement in each direction along with
-                    the MSD as a function of time for EACH atom (when msd_type is allatom)
-                    or EACH specie (when msd_type is com). The first time step is the
-                    reference. Not that this is used for getting the msd dataframe.
+                    the MSD as a function of time for EACH atom (when `msd_type` is
+                    allatom) or EACH specie (when `msd_type` is com). The first time
+                    step is the reference. Not that this is used for getting the msd
+                    dataframe.
                 - msd_int: The square of the displacement in each direction along with
                     the MSD for EACH atom or EACH specie, averaged over all possible
                     choices of time interval over the entire trajectory; only returned
-                    if avg_interval is set to True. The reference for each time interval
-                    is the previous time interval.
+                    if `avg_interval` is set to True. The reference for each time
+                    interval is the previous time interval.
         """
         dumps = parse_lammps_dumps(f"{self.outputs_dir}/{filename}")
         msd_dfs = []
