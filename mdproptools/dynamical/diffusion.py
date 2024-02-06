@@ -274,6 +274,35 @@ class Diffusion:
         save=False,
         plot=False,
     ):
+        """
+        Calculate the diffusion coefficient from the MSD data using the Einstein
+        relation. The diffusion coefficient is calculated as the slope of the linear
+        fit of the MSD as a function of time. The standard error and the R-squared value
+        are also calculated. The results are saved to a .csv file and optionally plotted.
+        Note that if both initial and final time are not provided, the entire MSD data
+        will be used to calculate the diffusion coefficients.
+
+        Args:
+            msd (pd.DataFrame): DataFrame containing the MSD data as a function of time.
+            initial_time (dict, optional): Initial time in seconds for each MSD column;
+                defaults to None.
+            final_time (dict, optional): Final time in seconds for each MSD column;
+                defaults to None.
+            dimension (int, optional): Dimension of the system; defaults to 3.
+            diff_names (list, optional): List of names for the diffusion coefficients
+                (e.g. if MSD data is for com of each molecule type, the names can be
+                the molecule names); defaults to None in which case the names are
+                set to the column numbers.
+            save (bool, optional): Whether to save the ordinary least squares model
+                results from statsmodel to a .txt file; defaults to False.
+            plot (bool, optional): Whether to plot the MSD and log MSD as a function of
+                time along with the fitted model; defaults to False.
+
+        Returns:
+            pd.DataFrame: DataFrame containing the diffusion coefficients, the standard
+                error, and the R-squared value for each MSD column. The results are
+                also saved to a diffusion.csv file in the `diff_dir` directory.
+        """
         # initial and final time in seconds
         if initial_time is None:
             initial_time = {}
