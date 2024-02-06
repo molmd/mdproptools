@@ -30,7 +30,25 @@ __version__ = "0.0.4"
 
 
 class Diffusion:
+    """
+    Class to calculate diffusion coefficients based on the mean square displacement (msd)
+    from LAMMPS trajectory or log files using Einstein expression. Supports calculation
+    of msd for all atoms or center of mass of molecules.
+    """
     def __init__(self, timestep=1, units="real", outputs_dir=None, diff_dir=None):
+        """
+        Creates an instance of the Diffusion class.
+
+        Args:
+            timestep (int or float): Timestep used in the LAMMPS simulation in the same
+                units specified as input; default is 1 fs for real units.
+            units (str): Units used in the LAMMMPS simulations; used to convert to SI
+                units; defaults to real unit
+            outputs_dir (str): Directory where the LAMMPS trajectory or log files are
+                located; defaults to current working directory.
+            diff_dir (str): Directory where the diffusion results (.txt, .csv, and .png
+                files) will be saved; defaults to current working directory.
+        """
         self.units = units
         if self.units not in constants.SUPPORTED_UNITS:
             raise KeyError(
