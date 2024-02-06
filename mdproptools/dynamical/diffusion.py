@@ -194,6 +194,8 @@ class Diffusion:
                 msd_dfs.append(df)
                 id_cols = ["type", "mol_id"]
                 col_1d = ["Time (s)", "type"]
+            else:
+                raise ValueError("msd_type must be 'allatom' or 'com'.")
             # convert to SI units
             df.loc[:, "xu"] = df["xu"] * constants.DISTANCE_CONVERSION[self.units]
             df.loc[:, "yu"] = df["yu"] * constants.DISTANCE_CONVERSION[self.units]
