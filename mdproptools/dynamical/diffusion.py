@@ -101,13 +101,13 @@ class Diffusion:
     def get_msd_from_dump(
         self,
         filename,
-        tao_coeff=4,
         msd_type="com",
         num_mols=None,
         num_atoms_per_mol=None,
         mass=None,
         com_drift=False,
         avg_interval=False,
+        tao_coeff=4,
     ):
         dumps = parse_lammps_dumps(f"{self.outputs_dir}/{filename}")
         msd_dfs = []
