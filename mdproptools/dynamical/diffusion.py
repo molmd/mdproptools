@@ -239,6 +239,22 @@ class Diffusion:
         return msd, msd_all
 
     def get_msd_from_log(self, log_pattern):
+        """
+        Extract the MSD data from a LAMMPS log file(s) and convert to SI units. The
+        log file(s) should include one or more columns with 'msd' in their names to
+        identify the MSD data.
+
+        Args:
+            log_pattern (str): A glob pattern string to identify the LAMMPS log files.
+                The pattern should match all relevant log files in the `outputs_dir`
+                directory of the simulation outputs.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the MSD data as a function of
+                simulation time. Each MSD column from the original log files is
+                preserved and converted to meters squared (m^2). A new column,
+                'Time (s)', is added to represent the simulation time in seconds.
+        """
         full_log = concat_log(log_pattern, step=None, working_dir=self.outputs_dir)
         msd = full_log.filter(regex="msd")
         for col in msd:
