@@ -410,6 +410,29 @@ class Diffusion:
     def get_diff_dist(
         self, msd_int, dump_freq, dimension=3, tao_coeff=4, plot=False, diff_names=None
     ):
+        """
+        Calculate the distribution of diffusion coefficients from the MSD data (msd_int)
+        obtained when `avg_interval` is set to True in `get_msd_from_dump`. Plot the
+        distribution of diffusion coefficients for the atoms or each species type in the
+        system and save the results to a .csv file.
+
+        Args:
+            msd_int (pd.DataFrame): DataFrame containing the MSD data for EACH atom or
+                EACH specie. See `get_msd_from_dump`.
+            dump_freq (int): Frequency of the LAMMPS dump files in steps.
+            dimension (int, optional): Dimension of the system; defaults to 3.
+            tao_coeff (int, optional): Time interval (step, unitless) used when
+                sampling the trajectory to get msd_int; defaults to 4.
+            plot (bool, optional): Whether to plot the distribution of diffusion
+                coefficients; defaults to False.
+            diff_names (list, optional): List of names for the diffusion coefficients
+                (e.g. if MSD data is for com of each molecule type, the names can be
+                the molecule names); defaults to None in which case the names are
+                set to the column numbers.
+
+        Returns:
+            None
+        """
         delta = dump_freq * self.timestep * constants.TIME_CONVERSION[self.units]
         msd_int["diff"] = msd_int["msd"] / (2 * dimension * tao_coeff * delta)
         msd_int.to_csv(f"{self.diff_dir}/msd_int.csv")
