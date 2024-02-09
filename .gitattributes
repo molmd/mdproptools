@@ -1,0 +1,2 @@
+*.csv filter=lfs diff=lfs merge=lfs -text
+data/mg_tfsi_dme/log.mixture_* filter=lfs diff=lfs merge=lfs -text
