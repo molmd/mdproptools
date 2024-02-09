@@ -18,7 +18,7 @@ class TestClusterAnalysis:
     @pytest.fixture(autouse=True)
     def setup_class(self, tmp_path):
         self.test_dir = Path(__file__).parent / "test_files"
-        self.data_dir = Path(__file__).resolve().parents[2] / "data" / "structural"
+        self.data_dir = Path(__file__).resolve().parents[2] / "data" / "mg_tfsi_dme"
         self.dump_files = str(self.data_dir / "dump.nvt.*.dump")
         self.elements = ["O", "C", "H", "N", "S", "O", "C", "F", "Mg"]
         self.r_cut = 2.3

@@ -12,7 +12,7 @@ from mdproptools.utilities.fluctuations import plot_fluctuations
 class TestFluctuations:
     @pytest.fixture(autouse=True)
     def setup_class(self, tmp_path):
-        self.data_dir = Path(__file__).resolve().parents[2] / "data" / "utilities"
+        self.data_dir = Path(__file__).resolve().parents[2] / "data" / "mg_tfsi_dme"
         self.test_dir = Path(__file__).parent / "test_files"
         self.working_dir = tmp_path
         yield
