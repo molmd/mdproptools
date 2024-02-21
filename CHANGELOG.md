@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add docstrings for all functions and classes. 
 - Add tests using `pytest` for all functions and classes.
-- Ass a Jupyter notebook showing examples of how to use MDPropTools. 
+- Add a Jupyter notebook showing examples of how to use `MDPropTools`. 
 
 ### Fixed 
 - Fix bug in identifying unique configurations in the `cluster_analysis` module.
@@ -24,3 +24,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update setup.py to ensure accurate dependency requirements.
 - Perform minor cleanups and bug fixes.
 
+## [0.0.3] - 2022-01-14
