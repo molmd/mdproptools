@@ -1,3 +1,59 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mdproptools"
+authors = [
+    {name = "Rasha Atwi", email = "rasha.atwi@stonybrook.edu"},
+    {name = "Matthew Bliss", email = "matthew.bliss@stonybrook.edu"},
+    {name = "Maxim Makeev", email = "maxim.makeev@stonybrook.edu"}
+]
+dynamic = ["version"]
+description = "mdproptools contains MD analysis tools"
+readme = "README.md"
+license = { text = "MIT" }
+keywords = ["MD", "analysis", "lammps"]
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+]
+requires-python = ">=3.6"
+dependencies = [
+    "numpy >= 1.21.1",
+    "matplotlib >= 3.3.1",
+    "scipy >= 1.5.2",
+    "pandas >= 1.1.2",
+    "seaborn >= 0.11.0",
+    "statsmodels >= 0.12.0",
+    "numba == 0.56.4",
+    "llvmlite == 0.39.1",
+    "tqdm>=4.50.0",
+    "pymatgen@git+https://github.com/molmd/pymatgen@molmd_fix#egg=pymatgen"
+]
+
+[project.optional-dependencies]
+dev = ["black>=23.3.0", "isort>=5.10.0", "pytest>=7.4.0", "pytest-benchmark>=4.0.0"]
+
+[project.urls]
+repository = "https://github.com/molmd/mdproptools"
+changelog = "https://github.com/molmd/mdproptools/blob/master/CHANGELOG.md"
+
+[tool.setuptools]
+license-files = ["LICENSE"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "mdproptools.__version__"}
+
+[tool.setuptools.packages.find]
+namespaces = false
+
 [tool.isort]
 profile = "black"
 multi_line_output = 3
