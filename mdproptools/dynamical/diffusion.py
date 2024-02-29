@@ -4,9 +4,7 @@
 Calculates diffusion coefficient using Einstein relation from LAMMPS trajectory files.
 """
 
-import os
-import re
-import glob
+import os, re, glob
 
 import numpy as np
 import pandas as pd
@@ -19,6 +17,7 @@ from matplotlib.ticker import ScalarFormatter
 from pymatgen.io.lammps.outputs import parse_lammps_log, parse_lammps_dumps
 
 from mdproptools.common import constants
+from mdproptools.utilities.log import concat_log
 from mdproptools.common.com_mols import calc_com
 from mdproptools.utilities.plots import set_axis
 
@@ -31,7 +30,25 @@ __version__ = "0.0.4"
 
 
 class Diffusion:
+    """
+    Class to calculate diffusion coefficients based on the mean square displacement (msd)
+    from LAMMPS trajectory or log files using Einstein expression. Supports calculation
+    of msd for all atoms or center of mass of molecules.
+    """
     def __init__(self, timestep=1, units="real", outputs_dir=None, diff_dir=None):
+        """
+        Creates an instance of the Diffusion class.
+
+        Args:
+            timestep (int or float): Timestep used in the LAMMPS simulation in the same
+                units specified as input; default is 1 fs for real units.
+            units (str): Units used in the LAMMMPS simulations; used to convert to SI
+                units; defaults to real unit.
+            outputs_dir (str): Directory where the LAMMPS trajectory or log files are
+                located; defaults to current working directory.
+            diff_dir (str): Directory where the diffusion results (.txt, .csv, and .png
+                files) will be saved; defaults to current working directory.
+        """
         self.units = units
         if self.units not in constants.SUPPORTED_UNITS:
             raise KeyError(
@@ -84,14 +101,74 @@ class Diffusion:
     def get_msd_from_dump(
         self,
         filename,
-        tao_coeff=4,
         msd_type="com",
         num_mols=None,
         num_atoms_per_mol=None,
         mass=None,
         com_drift=False,
         avg_interval=False,
+        tao_coeff=4,
     ):
+        """
+        Calculate the mean square displacement (MSD) from a LAMMPS trajectory file. MSD
+        is calculated as the sum of the square of the displacement in each direction
+        (dx, dy, dz), averaged over all atoms or the center of mass of species of each
+        specie type in the system. The first point in time is taken as the reference for
+        calculating the displacements at each time. Note that this is not the case
+        for the msd_int output returned when `avg_interval` is True, where the reference
+        for each time interval is the previous time interval, allowing to average over
+        all possible choices of the time interval over the entire trajectory,
+        thereby making it possible to get a linear MSD as a function of time for each
+        atom or specie in the system.
+
+        Args:
+            filename (str): Pattern of the name of the LAMMPS dump files.
+            msd_type (str, optional): Type of MSD to calculate. Options are 'allatom'
+                or 'com' for the center of mass of each specie type in the system;
+                defaults to com.
+            num_mols (list of int, optional): Number of molecules of each molecule type;
+                should be consistent with PackmolRunner input; required if `msd_type`
+                is set to com; defaults to None.
+            num_atoms_per_mol (list of int, optional): Number of atoms in each molecule
+                type; order is similar to that in num_mols; required if `msd_type` is
+                set to com; defaults to None.
+            mass (list of float, optional): Mass of unique atom types in a LAMMPS dump
+                file; should be in the same order as in the LAMMPS data file and in
+                the same units specified as input, e.g. if the "real" units are used,
+                the masses should be in g/mole; required if `msd_type` is set to com and
+                the masses are not available in the dump file; defaults to None.
+            com_drift (bool, optional): Whether to correct for the center of mass drift
+                in the system; only used when `msd_type` is com; defaults to False.
+            avg_interval (bool, optional): Whether to calculate the msd for individual
+                atoms or individual species from each type; can be later used to
+                calculate the distribution of diffusion coefficients for a given atom or
+                specie rather than only having the average diffusion coefficient per
+                atom or specie type; defaults to False.
+            tao_coeff (int, optional): Time interval (step, unitless) to use when
+                sampling the trajectory to get msd_int, which corresponds to the msd
+                for each atom (when `msd_type` is allatom) or specie (when `msd_type`
+                is com), averaged over all possible choices of time interval over the
+                entire trajectory; for example, if your dump frequency is every
+                50,000 steps, and you choose tao to be 4, then the time interval for
+                calculating the msd will be every 200,000 steps; defaults to 4.
+
+        Returns:
+            tuple of pd.DataFrames:
+                - msd: The square of the displacement in each direction along with the
+                    MSD as a function of time, averaged over ALL atoms (when `msd_type`
+                    is allatom) or ALL species of the same type (when `msd_type` is com).
+                    The first time step is the reference.
+                - msd_all: The square of the displacement in each direction along with
+                    the MSD as a function of time for EACH atom (when `msd_type` is
+                    allatom) or EACH specie (when `msd_type` is com). The first time
+                    step is the reference. Not that this is used for getting the msd
+                    dataframe.
+                - msd_int: The square of the displacement in each direction along with
+                    the MSD for EACH atom or EACH specie, averaged over all possible
+                    choices of time interval over the entire trajectory; only returned
+                    if `avg_interval` is set to True. The reference for each time
+                    interval is the previous time interval.
+        """
         dumps = parse_lammps_dumps(f"{self.outputs_dir}/{filename}")
         msd_dfs = []
         for dump in dumps:
@@ -118,6 +195,8 @@ class Diffusion:
                 msd_dfs.append(df)
                 id_cols = ["type", "mol_id"]
                 col_1d = ["Time (s)", "type"]
+            else:
+                raise ValueError("msd_type must be 'allatom' or 'com'.")
             # convert to SI units
             df.loc[:, "xu"] = df["xu"] * constants.DISTANCE_CONVERSION[self.units]
             df.loc[:, "yu"] = df["yu"] * constants.DISTANCE_CONVERSION[self.units]
@@ -160,19 +239,23 @@ class Diffusion:
         return msd, msd_all
 
     def get_msd_from_log(self, log_pattern):
-        log_files = glob.glob(f"{self.outputs_dir}/{log_pattern}")
-        # based on pymatgen.io.lammps.outputs.parse_lammps_dumps function
-        if len(log_files) > 1:
-            pattern = r"%s" % log_pattern.replace("*", "([0-9]+)")
-            pattern = ".*" + pattern.replace("\\", "\\\\")
-            log_files = sorted(log_files, key=lambda f: int(re.match(pattern, f).group(1)))
-        list_log_df = []
-        for file in log_files:
-            log_df = parse_lammps_log(file)
-            list_log_df.append(log_df[0])
-        for p, l in enumerate(list_log_df[:-1]):
-            list_log_df[p] = l[:-1]
-        full_log = pd.concat(list_log_df, ignore_index=True)
+        """
+        Extract the MSD data from a LAMMPS log file(s) and convert to SI units. The
+        log file(s) should include one or more columns with 'msd' in their names to
+        identify the MSD data.
+
+        Args:
+            log_pattern (str): A glob pattern string to identify the LAMMPS log files.
+                The pattern should match all relevant log files in the `outputs_dir`
+                directory of the simulation outputs.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the MSD data as a function of
+                simulation time. Each MSD column from the original log files is
+                preserved and converted to meters squared (m^2). A new column,
+                'Time (s)', is added to represent the simulation time in seconds.
+        """
+        full_log = concat_log(log_pattern, step=None, working_dir=self.outputs_dir)
         msd = full_log.filter(regex="msd")
         for col in msd:
             msd.loc[:, col] = msd[col] * constants.DISTANCE_CONVERSION[self.units] ** 2
@@ -191,6 +274,35 @@ class Diffusion:
         save=False,
         plot=False,
     ):
+        """
+        Calculate the diffusion coefficient from the MSD data using the Einstein
+        relation. The diffusion coefficient is calculated as the slope of the linear
+        fit of the MSD as a function of time. The standard error and the R-squared value
+        are also calculated. The results are saved to a .csv file and optionally plotted.
+        Note that if both initial and final time are not provided, the entire MSD data
+        will be used to calculate the diffusion coefficients.
+
+        Args:
+            msd (pd.DataFrame): DataFrame containing the MSD data as a function of time.
+            initial_time (dict, optional): Initial time in seconds for each MSD column;
+                defaults to None.
+            final_time (dict, optional): Final time in seconds for each MSD column;
+                defaults to None.
+            dimension (int, optional): Dimension of the system; defaults to 3.
+            diff_names (list, optional): List of names for the diffusion coefficients
+                (e.g. if MSD data is for com of each molecule type, the names can be
+                the molecule names); defaults to None in which case the names are
+                set to the column numbers.
+            save (bool, optional): Whether to save the ordinary least squares model
+                results from statsmodel to a .txt file; defaults to False.
+            plot (bool, optional): Whether to plot the MSD and log MSD as a function of
+                time along with the fitted model; defaults to False.
+
+        Returns:
+            pd.DataFrame: DataFrame containing the diffusion coefficients, the standard
+                error, and the R-squared value for each MSD column. The results are
+                also saved to a diffusion.csv file in the `diff_dir` directory.
+        """
         # initial and final time in seconds
         if initial_time is None:
             initial_time = {}
@@ -298,9 +410,31 @@ class Diffusion:
     def get_diff_dist(
         self, msd_int, dump_freq, dimension=3, tao_coeff=4, plot=False, diff_names=None
     ):
+        """
+        Calculate the distribution of diffusion coefficients from the MSD data (msd_int)
+        obtained when `avg_interval` is set to True in `get_msd_from_dump`. Plot the
+        distribution of diffusion coefficients for the atoms or each species type in the
+        system and save the results to a .csv file.
+
+        Args:
+            msd_int (pd.DataFrame): DataFrame containing the MSD data for EACH atom or
+                EACH specie. See `get_msd_from_dump`.
+            dump_freq (int): Frequency of the LAMMPS dump files in steps.
+            dimension (int, optional): Dimension of the system; defaults to 3.
+            tao_coeff (int, optional): Time interval (step, unitless) used when
+                sampling the trajectory to get msd_int; defaults to 4.
+            plot (bool, optional): Whether to plot the distribution of diffusion
+                coefficients; defaults to False.
+            diff_names (list, optional): List of names for the diffusion coefficients
+                (e.g. if MSD data is for com of each molecule type, the names can be
+                the molecule names); defaults to None in which case the names are
+                set to the column numbers.
+
+        Returns:
+            None
+        """
         delta = dump_freq * self.timestep * constants.TIME_CONVERSION[self.units]
         msd_int["diff"] = msd_int["msd"] / (2 * dimension * tao_coeff * delta)
-        msd_int.to_csv(f"{self.diff_dir}/msd_int.csv")
         if plot:
             paired = plt.get_cmap("Paired")
             colors = iter(paired(np.linspace(0, 1, 10)))
@@ -379,3 +513,5 @@ class Diffusion:
                     bbox_inches="tight",
                     pad_inches=0.1,
                 )
+        return msd_int
+

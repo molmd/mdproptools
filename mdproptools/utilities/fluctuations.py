@@ -1,25 +1,10 @@
 import os
-import re
-import glob
 
 import numpy as np
-import pandas as pd
-import seaborn as sns
-import statsmodels.api as sm
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-
-from scipy import optimize, integrate
-from matplotlib.ticker import ScalarFormatter
-
-from pymatgen.io.lammps.outputs import parse_lammps_log
 
 from mdproptools.common import constants
 from mdproptools.utilities.plots import set_axis
-
-sns.set()
-sns.set_style("ticks", {"xtick.major.size": 0.1, "ytick.major.size": 0.1})
-sns.set_palette(sns.color_palette(["#00807D", "#8CC8D5", "#A7A7A7"], n_colors=3))
 
 
 def _get_stats(stats):
@@ -29,10 +14,30 @@ def _get_stats(stats):
 def plot_fluctuations(
     log, log_prop, title, filename, timestep=1, units="real", working_dir=None
 ):
+    """
+    Plot fluctuations of a specified property from a LAMMPS log file over time and
+    print the mean and standard deviation of the property to the console.
+
+    Args:
+        log (DataFrame): Pandas DataFrame containing the log data.
+        log_prop (str): The property within the log to plot. Should match the property
+            name in the log.
+        title (str): The title of the plot.
+        filename (str): Name of the file to save the plot to.
+        timestep (float, optional): Timestep used in the simulations in the same units
+            specified as input; defaults to 1 fs when real units are used.
+        units (str, optional): Units used in the LAMMMPS simulations; used to convert to
+            SI units; defaults to real unit.
+        working_dir (str, optional): The working directory to save the plot in.
+            If None, the current working directory is used; defaults to None.
+
+    Returns:
+        None
+    """
     working_dir = working_dir or os.getcwd()
     fig, ax = plt.subplots(figsize=(8, 6), sharey=False)
     set_axis(ax, axis="both")
-    time_data = log["Step"] * timestep * constants.TIME_CONVERSION[units] * 10 ** 9
+    time_data = log["Step"] * timestep * constants.TIME_CONVERSION[units] * 10**9
     stats = log[log_prop].describe().loc[["mean", "std"]].to_dict()
     print("{}: mean = {}, std = {}".format(log_prop, stats["mean"], stats["std"]))
     ax.plot(time_data, log[log_prop], linewidth=2, color="red")
@@ -49,3 +54,4 @@ def plot_fluctuations(
     )
     fig.tight_layout(pad=3)
     fig.savefig(f"{working_dir}/{filename}", bbox_inches="tight", pad_inches=0.1)
+    return stats["mean"], stats["std"]

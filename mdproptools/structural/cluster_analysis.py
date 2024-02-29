@@ -15,10 +15,10 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 
+from tqdm import tqdm
+
 from pymatgen.core.structure import Molecule
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
-from pymatgen.core.periodic_table import _pt_data
-from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from mdproptools.structural.rdf_cn import _calc_rsq, _calc_atom_type
 
@@ -52,15 +52,50 @@ def get_clusters(
     filename,
     atom_type,
     r_cut,
+    num_mols,
+    num_atoms_per_mol,
     full_trajectory=False,
     frame=None,
-    num_mols=None,
-    num_atoms_per_mol=None,
     elements=None,
-    alter_atom_ids=False,
+    alter_atom_types=False,
     max_force=0.75,
     working_dir=None,
 ):
+    """
+    Extracts clusters within a cutoff distance from an atom from LAMMPS trajectory files
+    and saves them as *.xyz files in the working directory. The LAMMPS dump files
+    should contain the following attributes: id, type, x, y, z, fx, fy, fz. Additionally,
+    the elements of the atoms in the system should be provided if they are not in the
+    dump files.
+
+    Args:
+        filename (str or file handle): the name of the LAMMPS dump file; can be
+            the entire name for a single file or a file pattern with the
+            wildcard character ('*') for multiple dumps; should contain the path to the
+            dumps if they are not placed in the same directory
+        atom_type (int): the type of the atom around which the clusters are extracted
+        r_cut (float): the cutoff distance for the clusters in Angstroms
+        num_mols (list of int): the number of molecules of each type in the system
+        num_atoms_per_mol (list of int): the number of atoms in each molecule type
+        full_trajectory (bool, optional): if True, all frames in the trajectory are
+            processed
+        frame (int, optional): the frame number to be processed if full_trajectory is
+            set to False
+        elements (list of str, optional): name of the atom elements in the system;
+            required if the elements are not in the LAMMPS dump file
+        alter_atom_types (bool, optional): if True, new atom types will be calculated to
+            distinguish between two similar atoms in the same molecule or a different
+            molecule; defaults to False if default LAMMPS atom types are to be used; if
+            True, the atom_type argument should match the new atom types and not the
+            default LAMMPS atom types
+        max_force (float, optional): the maximum force on the atom in eV/Angstroms
+        working_dir (str, optional): path to the working directory where the cluster
+            files will be saved; defaults to the current working directory
+
+    Returns:
+        int: the number of clusters written to *.xyz files
+    """
+    # Map the elements to the atom types
     if elements:
         elements = {i + 1: j for i, j in enumerate(elements)}
     if not working_dir:
@@ -71,13 +106,16 @@ def get_clusters(
     else:
         dumps = [dumps[frame]]
 
+    # Iterate over the frames in the trajectory and extract the clusters
     cluster_count = 0
-    for index, dump in enumerate(dumps):
-        print("Processing frame number: {}".format(index))
+    for index, dump in enumerate(tqdm(dumps, desc="Processing dump files")):
+        # Calculate the box dimensions and sort the data by atom id
         lx = dump.box.bounds[0][1] - dump.box.bounds[0][0]
         ly = dump.box.bounds[1][1] - dump.box.bounds[1][0]
         lz = dump.box.bounds[2][1] - dump.box.bounds[2][0]
         df = dump.data.sort_values(by=["id"])
+
+        # Calculate the molecule type and id for each atom
         mol_types = []
         mol_ids = []
         for mol_type, number_of_mols in enumerate(num_mols):
@@ -87,54 +125,96 @@ def get_clusters(
                     mol_ids.append(mol_id + 1)
         df["mol_type"] = mol_types
         df["mol_id"] = mol_ids
+
+        if "element" not in df.columns and not elements:
+            raise ValueError(
+                "The elements of the atoms in the system should be provided if they "
+                "are not in the dump files."
+            )
+
         if elements:
             df["element"] = df["type"].map(elements)
-        if alter_atom_ids:
+
+        # Calculate the new atom types if requested by the user
+        if alter_atom_types:
             data = _calc_atom_type(df.values, num_mols, num_atoms_per_mol)
             df["type"] = data[:, 0]
+
+        # Iterate over the atoms of the specified type and extract the clusters
         counter = 0
         atoms = df[df["type"] == atom_type]["id"]
         for i in atoms:
             counter += 1
-            print("Processing atom number: {}".format(counter - 1))
-            data_head = df[df["id"] == i][["mol_type", "mol_id", "x", "y", "z"]].values[
-                0
-            ]
-            data_i, rsq = _calc_rsq(
-                data_head,
+            data_head_i = df[df["id"] == i][
+                ["mol_type", "mol_id", "x", "y", "z"]
+            ].values[0]
+
+            # Calculate the squared distance between the atom and all other atoms
+            data_all, rsq = _calc_rsq(
+                data_head_i,
                 df.loc[:, ["mol_type", "mol_id", "x", "y", "z"]].values,
                 lx,
                 ly,
                 lz,
                 2,
             )
-            cond = rsq < r_cut ** 2
-            data_i = data_i[cond, :]
+
+            # Extract the atoms within the cutoff distance from the atom
+            cond = rsq < r_cut**2
+            data_all = data_all[cond, :]
             ids = pd.DataFrame(
-                np.unique(data_i[:, [0, 1]], axis=0), columns=["mol_type", "mol_id"]
+                np.unique(data_all[:, [0, 1]], axis=0), columns=["mol_type", "mol_id"]
             )
             neighbor_df = ids.merge(df, on=["mol_type", "mol_id"])
+
+            # Calculate the minimum force on the atoms within each molecule in the
+            # neighbor dataframe
             min_force = (
                 neighbor_df.groupby(["mol_type", "mol_id"])
                 .agg({"fx": "sum", "fy": "sum", "fz": "sum"})
                 .min(axis=1)
                 * FORCE_CONSTANT
             )
+
+            # Extract the atoms with minimum force less than the maximum force specified
+            # by the user
             min_force_atoms = (
                 min_force[min_force < max_force]
                 .reset_index()[["mol_type", "mol_id"]]
                 .merge(neighbor_df, on=["mol_type", "mol_id"])
             )
-            # if elements:
-            # min_force_atoms['element'] = min_force_atoms['type'].map(elements)
-            data_head = df[df["id"] == i][["id", "x", "y", "z"]].values[0]
-            data_i = min_force_atoms.loc[
-                min_force_atoms["id"] != i, ["id", "x", "y", "z"]
-            ].values
-            data_i = np.insert(data_i, 0, data_head, axis=0)
-            data_i = _remove_boundary_effects(data_head, data_i, lx, ly, lz, 1)
+
+            # Find the corresponding mol_id and mol_type for atom i
+            atom_i_data = df[df["id"] == i].iloc[0]
+            mol_id_corresponding_to_i = atom_i_data["mol_id"]
+            mol_type_corresponding_to_i = atom_i_data["mol_type"]
+
+            # Extract data for atom i and its corresponding mol
+            data_head_i = atom_i_data[["id", "x", "y", "z"]].values
+
+            # Extract data for the corresponding mol (excluding atom i)
+            data_head_mol = min_force_atoms[
+                (min_force_atoms["mol_id"] == mol_id_corresponding_to_i)
+                & (min_force_atoms["mol_type"] == mol_type_corresponding_to_i)
+                & (min_force_atoms["id"] != i)
+            ][["id", "x", "y", "z"]].values
+
+            # Extract data for all other atoms (excluding atom i and its mol)
+            data_all = min_force_atoms[
+                (min_force_atoms["mol_id"] != mol_id_corresponding_to_i)
+                | (min_force_atoms["mol_type"] != mol_type_corresponding_to_i)
+            ][["id", "x", "y", "z"]].values
+
+            # Combine data for atom i, its mol, and all other atoms (all this to place
+            # atom i and the molecule it corresponds to at the top of the data)
+            data_all = np.vstack((data_head_i, data_head_mol, data_all))
+
+            # Remove the boundary effects from the filtered atoms
+            data_all = _remove_boundary_effects(data_head_i, data_all, lx, ly, lz, 1)
+
+            # Write the clusters to *.xyz files
             fin_df = (
-                pd.DataFrame(data_i, columns=["id", "x", "y", "z"])
+                pd.DataFrame(data_all, columns=["id", "x", "y", "z"])
                 .merge(min_force_atoms[["element", "id"]], on="id")
                 .drop("id", axis=1)
                 .set_index("element")
@@ -148,18 +228,13 @@ def get_clusters(
                 "0" * (len(str(len(atoms))) - len(str(counter - 1))),
                 counter - 1,
             )
-            f = open((os.path.join(working_dir, filename)), "a")
+            f = open((os.path.join(working_dir, filename)), "w")
             f.write("{}\n\n".format(len(fin_df)))
             fin_df.to_csv(
                 f, header=False, index=False, sep="\t", float_format="%15.10f"
             )
             f.close()
             cluster_count += 1
-        print(
-            "{} clusters written to *.xyz files".format(
-                len(df[df["type"] == atom_type]["id"])
-            )
-        )
     return cluster_count
 
 
@@ -175,28 +250,134 @@ def get_unique_configurations(
     mol_names=None,
     zip=True,
 ):
+    """
+    Identifies the configuration corresponding to each cluster file generated by the
+    get_clusters function. Optionally, identifies the top configurations and saves them
+    as conf_*.xyz files in the working directory. The clusters are assumed to be
+    generated using the get_clusters function. When identifying unique configurations,
+    the clusters are grouped based on the number of molecules of each type in the
+    cluster and the coordinating atoms in each cluster. The top configurations are
+    determined based on one of two criteria: (1) ones that occur more than a certain
+    percentage of the time or (2) ones that occur cumulatively more than a certain
+    percentage of the time. The user can specify either criterion by providing the
+    perc or cum_perc arguments, respectively. If both are provided, the cum_perc
+    argument is used. Two to three csv files are generated: clusters.csv,
+    configurations.csv, and top_conf.csv. top.conf.csv is only saved if find_top is set
+    to True. The clusters.csv file contains the number of molecules of each type
+    and the coordinating atoms in each cluster. The configurations.csv file contains the
+    number and % of clusters for each unique configuration. The top_conf.csv file
+    contains the top configurations and a corresponding sample cluster file for each
+    unique configuration. A zip file containing all the original cluster files is also
+    generated if zip is set to True.
+
+    Args:
+        cluster_pattern (str): the pattern of the cluster files, e.g. Cluster_*.xyz in
+            the working_dir
+        r_cut (float): the cutoff distance for two atoms to be considered coordinating
+        molecules (list of pymatgen.core.structure.Molecule): the molecules in the
+            system used to prepare the initial configuration for the LAMMPS simulations;
+            should be in the same order they appear in the LAMMPS dump files
+        type_coord_atoms (list of str, optional): the type of the coordinating atoms to
+            be considered in the clusters; defaults to None if all coordinating atoms
+            are to be considered (i.e. no filtering)
+        working_dir (str, optional): path to the working directory where the cluster
+            files are located and the final csv files will be saved; defaults to the
+            current working directory
+        find_top (bool, optional): if True, the top configurations are determined based
+            on either the percentage of the total number of clusters or the cumulative
+            percentage of the total number of clusters provided by the user;
+            defaults to True
+        perc (float, optional): will return the unique configurations that have a
+            frequency of occurrence greater than or equal to this value; defaults to None
+        cum_perc (float, optional): will return the unique configurations that have a
+            cumulative frequency of occurrence about this value; defaults to 90%,
+            meaning that clusters that make up 90% of the total number of clusters will
+            be returned if find_top is set to True
+        mol_names (list of str, optional): the names of the molecules in the system;
+            used when creating the final dataframes to mark the number of coordinating
+            molecules of each type (e.g. num_x, num_y, etc.) and the coordinating atoms
+            from each type (e.g. atoms_x, atoms_y, etc.); should match the order of the
+            molecules attribute; defaults to None meaning that the naming will be done
+            using the index of the molecules (e.g. num_1, num_2, etc. and atoms_1,
+            atoms_2, etc.)
+        zip (bool, optional): if True, a zip file (Clusters.zip) containing all the
+            original cluster files will be generated to clean up the working_dir;
+            defaults to True
+
+    Returns:
+        tuple: a tuple containing the following two dataframes: clusters and
+            configurations
+    """
     working_dir = working_dir or os.getcwd()
+
+    # Get a list of the cluster files
     cluster_files = glob.glob(f"{working_dir}/{cluster_pattern}")
+
+    # Get a list of the atoms in each molecule
     main_atoms = []
     for mol in molecules:
         main_atoms.append([str(i) for i in mol.species])
+
+    # Initialize the molecule number to which the atom of interest belongs
+    mol_num = None
+
+    # Iterate over the cluster files and process each one
     full_coord_mols = {"cluster": [], "num_mols": [], "coordinating_atoms": []}
-    for file in cluster_files:
+    for file_num, file in enumerate(
+        tqdm(cluster_files, desc="Processing cluster files")
+    ):
         mol = Molecule.from_file(file)
         full_coord_mols["cluster"].append(ntpath.basename(file))
+
+        # Get the coordinating atoms to the fist atom in each cluster; it is assumed
+        # that the first atom in each cluster is the atom of interest (this is the case
+        # when using the get_clusters function)
         coord_atoms = mol.get_neighbors(mol[0], r_cut)
-        if type_coord_atoms:
+
+        # Filter for coordinating atoms of the type specified by the user
+        if coord_atoms and type_coord_atoms:
             coord_atoms = [
                 i for i in coord_atoms if i.species_string in type_coord_atoms
             ]
-        cluster_atoms = [str(i) for i in mol.species]
+
+        # Get the molecule number to which the atom of interest belongs
+        if file_num == 0:
+            cluster_atoms = [str(i) for i in mol.species]
+            idx = 0
+            match_found = False
+
+            while idx < len(cluster_atoms):
+                for ind, atoms in enumerate(main_atoms):
+                    if cluster_atoms[idx : idx + len(atoms)] == atoms:
+                        mol_num = ind
+                        match_found = True
+                        break
+
+                if match_found:
+                    break
+                else:
+                    idx += 1
+
+        # Get a list of the atoms in each cluster excluding the ones in the molecule
+        # to which the atom of interest belongs
+        cluster_atoms = [str(i) for i in mol.species][len(main_atoms[mol_num]) :]
+
         coord_mols = {}
         for ind, atoms in enumerate(main_atoms):
             coord_mols[ind] = {"mol": [], "sites": []}
-            for idx in range(len(cluster_atoms)):
+            # Initialize the index for cluster_atoms
+            idx = 0
+            while idx < len(cluster_atoms):
                 if cluster_atoms[idx : idx + len(atoms)] == atoms:
-                    sub_mol = mol[idx : idx + len(atoms)]
+                    v_ = idx + len(main_atoms[mol_num])
+                    sub_mol = mol[v_ : v_ + len(atoms)]
                     coord_mols[ind]["mol"].append(sub_mol)
+                    # Move the index to the next position after the match
+                    idx += len(atoms)
+                else:
+                    # If no match, move to the next position
+                    idx += 1
+            # Add the coordinating atoms in each sub_mol to the dict
             for idx, sub_mol in enumerate(coord_mols[ind]["mol"]):
                 coords = []
                 for coord_atom in coord_atoms:
@@ -205,6 +386,8 @@ def get_unique_configurations(
                 coord_mols[ind]["sites"].append(coords)
             coord_mols[ind]["num_mol"] = len(coord_mols[ind]["mol"])
             del coord_mols[ind]["mol"]
+
+        # Add the number of molecules and the coordinating atoms to the full dict
         full_coord_mols["num_mols"].append(
             list(coord_mols[k]["num_mol"] for k in coord_mols)
         )
@@ -212,6 +395,7 @@ def get_unique_configurations(
             list(coord_mols[k]["sites"] for k in coord_mols)
         )
 
+    # Cleanups and formatting for the output dataframes
     full_str_coord = []
     for i in full_coord_mols["coordinating_atoms"]:
         str_coord = []
@@ -230,10 +414,16 @@ def get_unique_configurations(
     else:
         num_col_names = [f"num_{i+1}" for i in range(len(molecules))]
         atoms_col_names = [f"atoms_{i + 1}" for i in range(len(molecules))]
-    split_df = pd.DataFrame(df["num_mols"].tolist(), columns=num_col_names,)
+    split_df = pd.DataFrame(
+        df["num_mols"].tolist(),
+        columns=num_col_names,
+    )
     df = pd.concat([df, split_df], axis=1)
     df = df.drop("num_mols", axis=1)
-    split_df = pd.DataFrame(df["coordinating_atoms"].tolist(), columns=atoms_col_names,)
+    split_df = pd.DataFrame(
+        df["coordinating_atoms"].tolist(),
+        columns=atoms_col_names,
+    )
     df = pd.concat([df, split_df], axis=1)
     df = df.drop("coordinating_atoms", axis=1)
     df1 = (
@@ -276,28 +466,3 @@ def get_unique_configurations(
         shutil.make_archive(f"{working_dir}/Clusters", "zip", clusters_dir)
         shutil.rmtree(clusters_dir)
     return df, df1
-
-
-def group_clusters(cluster_pattern, tolerance=0.1, working_dir=None):
-    if not working_dir:
-        working_dir = os.getcwd()
-    mm = MoleculeMatcher(tolerance=tolerance)
-    filename_list = glob.glob((os.path.join(working_dir, cluster_pattern)))
-    mol_list = [Molecule.from_file(os.path.join(working_dir, f)) for f in filename_list]
-    mol_groups = mm.group_molecules(mol_list)
-    filename_groups = [
-        [filename_list[mol_list.index(m)] for m in g] for g in mol_groups
-    ]
-    for p, i in enumerate(filename_groups):
-        if p + 1 < 10:
-            conf_num = "0{}".format(p + 1)
-        else:
-            conf_num = p + 1
-        folder_name = "Configuration_{}".format(conf_num)
-        if not os.path.exists(folder_name):
-            os.mkdir((os.path.join(working_dir, folder_name)))
-            for f in i:
-                shutil.move(f, (os.path.join(working_dir, folder_name)))
-        else:
-            for f in i:
-                shutil.move(f, (os.path.join(working_dir, folder_name)))

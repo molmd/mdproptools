@@ -173,6 +173,7 @@ class Conductivity:
         Returns:
             j (array-like): Charge fluxes of shape (3, # molecule types, # time steps)
         """
+        # TODO: Speed up this function since it is the most time-consuming step
         inputs = []
         j = np.zeros((3, len(self.num_mols), len(glob.glob(f"{self.working_dir}/{self.filename}"))))
         for ind, dump in enumerate(self.dumps):
