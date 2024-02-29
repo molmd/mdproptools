@@ -38,7 +38,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["black>=23.3.0", "isort>=5.10.0", "pytest>=7.4.0", "pytest-benchmark>=4.0.0"]
+dev = ["black>=23.3.0", "isort>=5.10.0", "pytest>=7.4.0", "pytest-cov>=3.0.0", "pytest-benchmark>=4.0.0"]
 
 [project.urls]
 repository = "https://github.com/molmd/mdproptools"
