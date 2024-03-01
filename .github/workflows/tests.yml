@@ -36,32 +36,17 @@ jobs:
         python-version: ${{ matrix.python-version }}
         activate-environment: mdproptools-env
 
-    - name: Install conda packages
+    - name: Install dependencies
       run: |
         source /usr/share/miniconda/etc/profile.d/conda.sh
         conda activate mdproptools-env
         conda install -c conda-forge openbabel
-        conda list
-
-    - name: Install project dependencies
-      run: |
-        source /usr/share/miniconda/etc/profile.d/conda.sh
-        conda activate mdproptools-env
         pip install .[dev]
-        pip list
-
-    - name: Set up conda environment and verify
-      run: |
-        source /usr/share/miniconda/etc/profile.d/conda.sh
-        conda activate mdproptools-env
-        pip list
-      shell: bash
 
     - name: Run tests using pytest
       run: |
         source /usr/share/miniconda/etc/profile.d/conda.sh
         conda activate mdproptools-env
-        pip list
         pytest --durations=10 --cov=mdproptools --cov-report=xml
       shell: bash
 
