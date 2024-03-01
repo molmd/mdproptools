@@ -44,17 +44,14 @@ jobs:
       run: |
         pip install .[dev]
 
-    - name: Check environment
-      run: |
-        python --version
-        conda list
-
     - name: Set up conda environment and verify
       run: |
         source /usr/share/miniconda/etc/profile.d/conda.sh
         conda activate mdproptools-env
         which python
         conda info --envs
+        conda list
+        pip list
       shell: bash
 
     - name: Run tests using pytest
