@@ -49,6 +49,9 @@ jobs:
         python --version
         conda list
 
+    - name: Initialize Conda
+      run: echo "source $(conda info --base)/etc/profile.d/conda.sh" >> $GITHUB_ENV
+
     - name: Verify conda environment
       run: |
         conda activate mdproptools-env
