@@ -32,8 +32,10 @@ jobs:
 
     - name: Create and prepare Conda environment
       run: |
-        conda create --name mdproptools-env python=3.7 -c conda-forge openbabel=3.1.0
+        conda create --name mdproptools-env python=3.7
         conda activate mdproptools-env
+        conda install -c conda-forge openbabel=3.1.0
+        conda list
 
 #    - name: Set up conda
 #      uses: conda-incubator/setup-miniconda@v3
