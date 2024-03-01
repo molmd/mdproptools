@@ -45,6 +45,8 @@ jobs:
 
     - name: Install project dependencies
       run: |
+        source /usr/share/miniconda/etc/profile.d/conda.sh
+        conda activate mdproptools-env
         pip install .[dev]
         pip list
 
@@ -54,7 +56,7 @@ jobs:
         conda activate mdproptools-env
         which python
         conda info --envs
-        conda list
+#        conda list
         pip list
       shell: bash
 
