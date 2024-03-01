@@ -25,10 +25,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-#    - name: Set up Python ${{ matrix.python-version }}
-#      uses: actions/setup-python@v5
-#      with:
-#        python-version: ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
 
     - name: Set up conda
       uses: conda-incubator/setup-miniconda@v3
@@ -48,6 +48,12 @@ jobs:
       run: |
         python --version
         conda list
+
+    - name: Verify conda environment
+      run: |
+        conda activate mdproptools-env
+        which python
+        conda info --envs
 
     - name: Run tests using pytest
       run: pytest --durations=10 --cov=mdproptools --cov-report=xml
