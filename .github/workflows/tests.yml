@@ -39,10 +39,12 @@ jobs:
     - name: Install conda packages
       run: |
         conda install -c conda-forge openbabel
+        conda list
 
     - name: Install project dependencies
       run: |
         pip install .[dev]
+        pip list
 
     - name: Set up conda environment and verify
       run: |
