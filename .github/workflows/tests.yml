@@ -40,14 +40,14 @@ jobs:
       run: |
         conda install -c conda-forge openbabel
 
+    - name: Install project dependencies
+      run: |
+        pip install .[dev]
+
     - name: Check environment
       run: |
         python --version
         conda list
-
-    - name: Install project dependencies
-      run: |
-        pip install .[dev]
 
     - name: Run tests using pytest
       run: pytest --durations=10 --cov=mdproptools --cov-report=xml
