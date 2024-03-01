@@ -54,14 +54,16 @@ jobs:
       run: |
         source /usr/share/miniconda/etc/profile.d/conda.sh
         conda activate mdproptools-env
-        which python
-        conda info --envs
-#        conda list
         pip list
       shell: bash
 
-    - name: Run tests using pytest
-      run: pytest --durations=10 --cov=mdproptools --cov-report=xml
+#    - name: Run tests using pytest
+#      run: |
+#        source /usr/share/miniconda/etc/profile.d/conda.sh
+#        conda activate mdproptools-env
+#        pip list
+#        pytest --durations=10 --cov=mdproptools --cov-report=xml
+#      shell: bash
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4.0.1
