@@ -49,14 +49,13 @@ jobs:
         python --version
         conda list
 
-    - name: Initialize Conda
-      run: echo "source $(conda info --base)/etc/profile.d/conda.sh" >> $GITHUB_ENV
-
-    - name: Verify conda environment
+    - name: Set up conda environment and verify
       run: |
+        source /usr/share/miniconda/etc/profile.d/conda.sh
         conda activate mdproptools-env
         which python
         conda info --envs
+      shell: bash
 
     - name: Run tests using pytest
       run: pytest --durations=10 --cov=mdproptools --cov-report=xml
