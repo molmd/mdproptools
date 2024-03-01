@@ -38,6 +38,8 @@ jobs:
 
     - name: Install conda packages
       run: |
+        source /usr/share/miniconda/etc/profile.d/conda.sh
+        conda activate mdproptools-env
         conda install -c conda-forge openbabel
         conda list
 
