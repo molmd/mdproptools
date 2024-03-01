@@ -33,7 +33,7 @@ jobs:
     - name: Set up conda
       uses: conda-incubator/setup-miniconda@v3
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.7
         activate-environment: mdproptools-env
 
     - name: Check environment
