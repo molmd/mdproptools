@@ -39,6 +39,7 @@ class TestClusterAnalysis:
         assert len(xyz_files_test) == len(xyz_files), "Number of XYZ files mismatch."
         for file1, file2 in zip(xyz_files_test, xyz_files):
             are_same = filecmp.cmp(file1, file2, shallow=False)
+            print(f"Comparing {file1} and {file2}")
             with open(file1, 'r') as file:
                 for line in file:
                     print(line, end='')
