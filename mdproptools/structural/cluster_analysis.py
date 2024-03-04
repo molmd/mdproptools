@@ -450,7 +450,7 @@ def get_unique_configurations(
                 "configurations"
             )
         merge_cols = [i for i in list(df.columns) if i.startswith("atoms_")]
-        print(df)
+        df = df.sort_values("cluster")
         top_config = top_config.merge(
             df[["cluster"] + merge_cols], on=merge_cols
         ).drop_duplicates(merge_cols)
