@@ -84,7 +84,6 @@ class TestDiffusion:
         )
 
         msd = pd.read_csv(str(self.test_dir / msd_file))
-        print(msd)
         pd.testing.assert_frame_equal(msd_test, msd)
 
         msd_all = pd.read_csv(str(self.test_dir / all_com_file))
