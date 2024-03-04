@@ -23,20 +23,20 @@
 [LAMMPS](https://www.lammps.org/#gsc.tab=0) trajectory and output files.
 
 The supported properties are:
-- **Structural**:
-    - Radial distribution function (RDF)
-    - Coordination number
-    - Cluster analysis
-    - Hydration number 
-    - Number density
-  
 
-- **Dynamical**:
-  - Mean square displacement (MSD)
-  - Diffusion coefficient
-  - Ionic conductivity (using Green-Kubo relation)
-  - Viscosity (using Green-Kubo relation)
-  - Residence time
+| Category    | Property                                          |
+|-------------|---------------------------------------------------|
+| Structural  | Radial distribution function (RDF)                |
+|             | Coordination number                               |
+|             | Cluster analysis                                  |
+|             | Hydration number                                  |
+|             | Number density                                    |
+| Dynamical   | Mean square displacement (MSD)                    |
+|             | Diffusion coefficient                             |
+|             | Ionic conductivity (using Green-Kubo relation)    |
+|             | Viscosity (using Green-Kubo relation)             |
+|             | Residence time                                    |
+
 
 The release history and changelog can be found in [the changelog](CHANGELOG.md).
 
