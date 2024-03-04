@@ -450,10 +450,10 @@ def get_unique_configurations(
                 "configurations"
             )
         merge_cols = [i for i in list(df.columns) if i.startswith("atoms_")]
+        print(df)
         top_config = top_config.merge(
             df[["cluster"] + merge_cols], on=merge_cols
         ).drop_duplicates(merge_cols)
-        print(top_config)
         for ind, cluster in enumerate(top_config["cluster"]):
             shutil.copy(f"{working_dir}/{cluster}", f"{working_dir}/conf_{ind+1}.xyz")
         top_config.to_csv(f"{working_dir}/top_conf.csv", index=False)
