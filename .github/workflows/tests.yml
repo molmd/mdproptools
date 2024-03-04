@@ -48,7 +48,6 @@ jobs:
         source /usr/share/miniconda/etc/profile.d/conda.sh
         conda activate mdproptools-env
         pytest --durations=10 --cov=mdproptools --cov-report=xml --capture=tee-sys
-      shell: bash
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4.0.1
