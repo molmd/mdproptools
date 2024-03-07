@@ -79,6 +79,7 @@ class TestClusterAnalysis:
             cluster_pattern="Cluster_*.xyz",
             r_cut=self.r_cut,
             molecules=load_molecules,
+            mol_num=2,
             type_coord_atoms=["O", "N", "Mg"],
             working_dir=self.working_dir,
             find_top=True,
