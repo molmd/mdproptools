@@ -73,7 +73,8 @@ def get_clusters(
             the entire name for a single file or a file pattern with the
             wildcard character ('*') for multiple dumps; should contain the path to the
             dumps if they are not placed in the same directory
-        atom_type (int): the type of the atom around which the clusters are extracted
+        atom_type (int): the type number of the atom (as it appears in the LAMMPS data
+            file) around which the clusters are extracted
         r_cut (float): the cutoff distance for the clusters in Angstroms
         num_mols (list of int): the number of molecules of each type in the system
         num_atoms_per_mol (list of int): the number of atoms in each molecule type
