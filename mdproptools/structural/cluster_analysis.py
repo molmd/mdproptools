@@ -243,6 +243,7 @@ def get_unique_configurations(
     cluster_pattern,
     r_cut,
     molecules,
+    mol_num,
     type_coord_atoms=None,
     working_dir=None,
     find_top=True,
@@ -278,6 +279,10 @@ def get_unique_configurations(
         molecules (list of pymatgen.core.structure.Molecule): the molecules in the
             system used to prepare the initial configuration for the LAMMPS simulations;
             should be in the same order they appear in the LAMMPS dump files
+        mol_num (int): the order number of the molecule to which the atom of interest
+            belongs as it appears in the molecules list; for example, if molecules is
+            [dme, tfsi, mg], and the atom of interest belongs to tfsi, then mol_num is
+            1 (0-based index)
         type_coord_atoms (list of str, optional): the type of the coordinating atoms to
             be considered in the clusters; defaults to None if all coordinating atoms
             are to be considered (i.e. no filtering)
@@ -319,9 +324,6 @@ def get_unique_configurations(
     for mol in molecules:
         main_atoms.append([str(i) for i in mol.species])
 
-    # Initialize the molecule number to which the atom of interest belongs
-    mol_num = None
-
     # Iterate over the cluster files and process each one
     full_coord_mols = {"cluster": [], "num_mols": [], "coordinating_atoms": []}
     for file_num, file in enumerate(
@@ -340,24 +342,6 @@ def get_unique_configurations(
             coord_atoms = [
                 i for i in coord_atoms if i.species_string in type_coord_atoms
             ]
-
-        # Get the molecule number to which the atom of interest belongs
-        if file_num == 0:
-            cluster_atoms = [str(i) for i in mol.species]
-            idx = 0
-            match_found = False
-
-            while idx < len(cluster_atoms):
-                for ind, atoms in enumerate(main_atoms):
-                    if cluster_atoms[idx : idx + len(atoms)] == atoms:
-                        mol_num = ind
-                        match_found = True
-                        break
-
-                if match_found:
-                    break
-                else:
-                    idx += 1
 
         # Get a list of the atoms in each cluster excluding the ones in the molecule
         # to which the atom of interest belongs
