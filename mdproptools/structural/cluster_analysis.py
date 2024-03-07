@@ -316,6 +316,16 @@ def get_unique_configurations(
     Returns:
         tuple: a tuple containing the following two dataframes: clusters and
             configurations
+
+    Note:
+        Be advised that the algorithm for identifying unique configurations may not
+        accurately work in the following edge case. It is recommended to check your
+        results when your system satisfies both of these conditions:
+        - One main molecule type is a subset of another, with both types beginning with
+          the same sequence of shared atom types, and
+        - The smaller molecule type (the subset) precedes the larger molecule within
+          the same cluster (this happens when the molecules are not in a decreasing
+          order of their size in the original LAMMPS data/trajectory files)
     """
     working_dir = working_dir or os.getcwd()
 
