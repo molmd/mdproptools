@@ -350,28 +350,22 @@ def get_unique_configurations(
         # to which the atom of interest belongs
         cluster_atoms = [str(i) for i in mol.species][len(main_atoms[mol_num]) :]
 
-        coord_mols = {}
-        for ind, atoms in enumerate(main_atoms):
-            coord_mols[ind] = {"mol": [], "sites": []}
-            # Initialize the index for cluster_atoms
-            idx = 0
-            while idx < len(cluster_atoms):
-                if cluster_atoms[idx : idx + len(atoms)] == atoms:
+        idx = 0
+        coord_mols = {ind: {"mol": [], "sites": []} for ind in range(len(molecules))}
+        while idx < len(cluster_atoms):
+            for ind, atoms in enumerate(main_atoms):
+                if cluster_atoms[idx: idx + len(atoms)] == atoms:
                     v_ = idx + len(main_atoms[mol_num])
-                    sub_mol = mol[v_ : v_ + len(atoms)]
-                    coord_mols[ind]["mol"].append(sub_mol)
-                    # Move the index to the next position after the match
+                    sub_mol = mol[v_: v_ + len(atoms)]
                     idx += len(atoms)
-                else:
-                    # If no match, move to the next position
-                    idx += 1
-            # Add the coordinating atoms in each sub_mol to the dict
-            for idx, sub_mol in enumerate(coord_mols[ind]["mol"]):
-                coords = []
-                for coord_atom in coord_atoms:
-                    if coord_atom in sub_mol:
-                        coords.append(coord_atom.species_string)
-                coord_mols[ind]["sites"].append(coords)
+                    coord_mols[ind]["mol"].append(sub_mol)
+                    coords = []
+                    for coord_atom in coord_atoms:
+                        if coord_atom in sub_mol:
+                            coords.append(coord_atom.species_string)
+                    coord_mols[ind]["sites"].append(coords)
+                    break
+        for ind in coord_mols.keys():
             coord_mols[ind]["num_mol"] = len(coord_mols[ind]["mol"])
             del coord_mols[ind]["mol"]
 
