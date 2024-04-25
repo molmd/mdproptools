@@ -15,15 +15,18 @@ readme = "README.md"
 license = { text = "MIT" }
 keywords = ["MD", "analysis", "lammps"]
 classifiers = [
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Information Technology",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering",
 ]
-requires-python = ">=3.6"
+requires-python = ">=3.9"
 dependencies = [
     "numpy >= 1.21.1",
     "matplotlib >= 3.3.1",
