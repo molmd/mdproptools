@@ -37,7 +37,7 @@ dependencies = [
     "numba == 0.56.4",
     "llvmlite == 0.39.1",
     "tqdm>=4.50.0",
-    "pymatgen@git+https://github.com/molmd/pymatgen@molmd_fix#egg=pymatgen"
+    "pymatgen@git+https://github.com/molmd/pymatgen@molmd_fix_3-9#egg=pymatgen"
 ]
 
 [project.optional-dependencies]
