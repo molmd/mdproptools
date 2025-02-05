@@ -36,8 +36,7 @@ dependencies = [
     "numba == 0.56.4",
     "llvmlite == 0.39.1",
     "tqdm>=4.50.0",
-    "pymatgen@git+https://github.com/molmd/pymatgen@molmd_fix_3-9#egg=pymatgen"
-]
+    ]
 
 [project.optional-dependencies]
 dev = ["black>=23.3.0", "isort>=5.10.0", "pytest>=7.4.0", "pytest-cov>=3.0.0", "pytest-benchmark>=4.0.0"]

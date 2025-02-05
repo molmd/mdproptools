@@ -1,0 +1,1 @@
+pymatgen@git+https://github.com/molmd/pymatgen@molmd_fix_3-9#egg=pymatgen
