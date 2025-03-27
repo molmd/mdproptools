@@ -69,7 +69,7 @@ For examples on how to use `MDPropTools`, please see the Jupyter notebooks in th
 
 ## 👥 Contributing
 
-All bug reports, suggestions, feedback, and pull requests occurs in the [MDPropTools GitHub repository](https://github.com/molmd/mdproptools). Some contribution guidelines can be found in the [contributing notes](CONTRIBUTING.md).
+All bug reports, suggestions, feedback, and pull requests occurs in the [MDPropTools GitHub repository](https://github.com/molmd/mdproptools). Some contribution guidelines can be found in the [contributing notes](https://github.com/molmd/mdproptools/blob/master/CONTRIBUTING.md).
 
 ## 📖 Citation
 
