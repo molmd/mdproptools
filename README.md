@@ -34,7 +34,7 @@ The supported properties are:
 |            | Viscosity (using Green-Kubo relation)          |
 |            | Residence time                                 |
 
-The release history and changelog can be found in [the changelog](CHANGELOG.md).
+The release history and changelog can be found in [the changelog](https://github.com/molmd/mdproptools/blob/master/CHANGELOG.md).
 
 ## 📦 Installation
 
