@@ -4,8 +4,7 @@
 Calculates the ionic conductivity from LAMMPS trajectory files.
 """
 
-import os
-import glob
+import os, glob
 
 from multiprocessing import Pool, cpu_count
 
