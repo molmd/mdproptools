@@ -17,7 +17,7 @@ __maintainer__ = "Matthew Bliss"
 __email__ = "matthew.bliss@stonybrook.edu"
 __status__ = "Development"
 __date__ = "Jun 2020"
-__version__ = "0.0.4"
+__version__ = "0.0.6"
 
 BOLTZMANN = 1.380649 * 10 ** -23  # J/K
 

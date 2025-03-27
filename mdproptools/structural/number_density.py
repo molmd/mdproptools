@@ -24,7 +24,7 @@ __maintainer__ = "Rasha Atwi"
 __email__ = "rasha.atwi@stonybrook.edu"
 __status__ = "Development"
 __date__ = "May 2020"
-__version__ = "0.0.4"
+__version__ = "0.0.6"
 
 
 def calc_number_density(

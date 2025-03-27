@@ -27,7 +27,7 @@ __maintainer__ = "Rasha Atwi"
 __email__ = "rasha.atwi@stonybrook.edu"
 __status__ = "Development"
 __date__ = "Sep 2021"
-__version__ = "0.0.4"
+__version__ = "0.0.6"
 
 
 # TODO: Implement and test other methods for calculating conductivity (eg. Einstein

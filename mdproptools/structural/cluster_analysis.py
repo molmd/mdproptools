@@ -4,11 +4,7 @@
 Extracts clusters within a cutoff distance from an atom from LAMMPS trajectory files.
 """
 
-import os
-import glob
-import ntpath
-import shutil
-import warnings
+import os, glob, ntpath, shutil, warnings
 
 from collections import Counter
 
@@ -27,7 +23,7 @@ __maintainer__ = "Rasha Atwi"
 __email__ = "rasha.atwi@stonybrook.edu"
 __status__ = "Development"
 __date__ = "Apr 2020"
-__version__ = "0.0.4"
+__version__ = "0.0.6"
 
 FORCE_CONSTANT = 0.043363 / 16.0
 
