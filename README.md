@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD033 -->
 <!-- markdownlint-disable-next-line MD041 -->
 <div align="center" style="padding-bottom: 1em;">
-<img width="400px" align="center" src="docs/logo.png">
+<img width="400px" align="center" src="https://raw.githubusercontent.com/molmd/mdproptools/master/docs/logo.png">
 </div>
 
 # <div align="center">MDPropTools: MD Property Tools</div>
