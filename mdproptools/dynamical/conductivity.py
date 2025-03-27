@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 from matplotlib.ticker import ScalarFormatter
 
 from pymatgen.io.lammps.outputs import parse_lammps_dumps
@@ -229,7 +229,7 @@ class Conductivity:
         integral = np.zeros((len(tot_flux), len(tot_flux[0])))
         delta = self.time[1] - self.time[0]
         for i in range(0, len(tot_flux)):
-            integral[i][1:] = cumtrapz(tot_flux[i], dx=delta)
+            integral[i][1:] = cumulative_trapezoid(tot_flux[i], dx=delta)
         return integral
 
     def fit_curve(self, tot_flux, integral, tol):
